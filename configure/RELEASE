@@ -5,7 +5,10 @@
 #If using macro substitutions, point MSI at the binary:
 #MSI=<path>extensions/bin/$(EPICS_HOST_ARCH)/msi
 
+EPICS_MODULES=/afs/slac/g/lcls/build/epics/modules
+MISCUTILS=$(EPICS_MODULES)/miscUtils/Devl
+
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/afs/slac/g/lcls/epics/base
-TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
-INSTALL_LOCATION_APP=$(TOP)/../..
+EPICS_BASE_RELEASE=/afs/slac/g/lcls/build/epics/base/base-R1-0-0
+EPICS_BASE=$(EPICS_BASE_RELEASE)
+
