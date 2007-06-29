@@ -1,4 +1,7 @@
 TOP=..
+ifeq ("$(wildcard $(TOP)/configure/CONFIG)xx","xx")
+TOP=../..
+endif
 
 include $(TOP)/configure/CONFIG
 #----------------------------------------
