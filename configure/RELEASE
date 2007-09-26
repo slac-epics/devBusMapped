@@ -2,10 +2,41 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-#If using macro substitutions, point MSI at the binary:
-#MSI=<path>extensions/bin/$(EPICS_HOST_ARCH)/msi
 
+# =============================================================
+# Define the top of the EPICS tree for your site.
+# We will build some tools/scripts that allow us to
+# change this easily when relocating software.
+# ==============================================================
+EPICS_SITE_TOP=/nfs/slac/g/lcls/build/epics
+
+
+# =============================================================
+# Define location of module tree with respect to
+# EPICS_SITE_TOP
+# =============================================================
+EPICS_MODULES=$(EPICS_SITE_TOP)/modules
+
+
+# ==============================================================
+# Define the version of EPICS BASE that you will use
+# =============================================================
+BASE_MODULE_VERSION=base-R3-14-8-2-lcls1
+
+
+
+# =============================================================
+# Define the version of modules needed by
+# IOC apps or other Support apps
+# =============================================================
+MISCUTILS_MODULE_VERSION=miscUtils-R1-0-0
+
+
+
+MISCUTILS=$(EPICS_MODULES)/miscUtils/$(MISCUTILS_MODULE_VERSION)
+
+# =================================================================
+# Define EPICS_BASE
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/afs/slac/g/lcls/epics/base
-TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
-INSTALL_LOCATION_APP=$(TOP)/../..
+# =================================================================
+EPICS_BASE=$(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
