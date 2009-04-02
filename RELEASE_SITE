@@ -67,7 +67,7 @@ MSI=$(EPICS_EXTENSIONS)/bin/$(EPICS_HOST_ARCH)/msi
 # Location of external packages required by various EPICS
 # Components
 # =============================================================
-EXTERNAL_PACKAGES=/pcds/package
+EXTERNAL_PACKAGES=/reg/g/pcds/package
 
 # =============================================================
 # Location of the PCDS development tools that are not part of 

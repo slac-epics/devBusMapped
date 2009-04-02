@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * epicsInterruptibleSyscall.c,v 1.11 2004/05/17 17:40:45 norume Exp
+ * epicsInterruptibleSyscall.c,v 1.13 2008/05/29 14:28:55 norume Exp
  */
 
 #include <stdio.h>
@@ -66,11 +66,6 @@ epicsInterruptibleSyscallMustCreate(const char *msg)
     if (c == NULL)
         cantProceed(msg);
     return c;
-}
-
-static void
-resetInterruptibleSyscall(epicsInterruptibleSyscallContext *c)
-{
 }
 
 int

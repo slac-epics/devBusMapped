@@ -828,15 +828,29 @@ static void asynCallbackSpecial(asynUser * pasynUser)
             }
             if(pasynRec->cnct) {
                 if(!isConnected) {
-                    pasynRecPvt->pasynCommon->connect(
+                    status = pasynRecPvt->pasynCommon->connect(
                                       pasynRecPvt->asynCommonPvt, pasynUser);
+                    if (status!=asynSuccess) {
+                        reportError(pasynRec, asynError,
+                            "asynCallbackSpecial callbackConnect connect: %s",
+                                                    pasynUser->errorMessage);
+
+                        break;
+                    }
                 } else {
                     monitorStatus(pasynRec);
                 }
             } else {
                 if(isConnected) {
-                    pasynRecPvt->pasynCommon->disconnect(
+                    status = pasynRecPvt->pasynCommon->disconnect(
                                       pasynRecPvt->asynCommonPvt, pasynUser);
+                    if (status!=asynSuccess) {
+                        reportError(pasynRec, asynError,
+                            "asynCallbackSpecial callbackConnect disconnect: %s",
+                                                    pasynUser->errorMessage);
+
+                        break;
+                    }
                 } else {
                     monitorStatus(pasynRec);
                 }
@@ -1412,6 +1426,8 @@ static void performOctetIO(asynUser * pasynUser)
     size_t nread = 0;
     size_t nwrite = 0;
     int eomReason = 0;
+    char saveEosBuf[5];
+    int saveEosLen;
     int ntranslate;
 
     if(pasynRec->ofmt == asynFMT_ASCII) {
@@ -1457,8 +1473,21 @@ static void performOctetIO(asynUser * pasynUser)
         /* Send the message */
         nbytesTransfered = 0;
         if(pasynRec->ofmt == asynFMT_Binary) {
-            status = pasynRecPvt->pasynOctet->writeRaw(pasynRecPvt->asynOctetPvt,
+            status = pasynRecPvt->pasynOctet->getOutputEos(
+                                    pasynRecPvt->asynOctetPvt,pasynUser,
+                                    saveEosBuf,sizeof saveEosBuf,&saveEosLen);
+            if (status != asynSuccess) {
+                reportError(pasynRec, status, "EOS TOO LONG");
+                return;
+            }
+            if (saveEosLen)
+                pasynRecPvt->pasynOctet->setOutputEos(pasynRecPvt->asynOctetPvt,
+                                                             pasynUser,NULL,0);
+            status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
                                  pasynUser, outptr, nwrite, &nbytesTransfered);
+            if (saveEosLen)
+                pasynRecPvt->pasynOctet->setOutputEos(pasynRecPvt->asynOctetPvt,
+                                             pasynUser,saveEosBuf,saveEosLen);
         } else {
             /* ASCII or Hybrid mode */
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
@@ -1482,8 +1511,19 @@ static void performOctetIO(asynUser * pasynUser)
         nbytesTransfered = 0;
         status = asynSuccess;
         if(pasynRec->ifmt == asynFMT_Binary) {
-            status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynOctetPvt,
+            status = pasynRecPvt->pasynOctet->getInputEos(
+                                    pasynRecPvt->asynOctetPvt,pasynUser,
+                                    saveEosBuf,sizeof saveEosBuf,&saveEosLen);
+            if (status != asynSuccess) {
+                reportError(pasynRec, status, "EOS TOO LONG");
+                return;
+            }
+            pasynRecPvt->pasynOctet->setInputEos(pasynRecPvt->asynOctetPvt,
+                                                             pasynUser,NULL,0);
+            status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
                   pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
+            pasynRecPvt->pasynOctet->setInputEos(pasynRecPvt->asynOctetPvt,
+                                             pasynUser,saveEosBuf,saveEosLen);
         } else {
             /* ASCII or Hybrid mode */
             status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
@@ -1635,7 +1675,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
             recGblSetSevr(pasynRec,WRITE_ALARM, MAJOR_ALARM);
         }
         /* Read the response byte  */
-        status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynOctetPvt,
+        status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
                 pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered,0);
         if(status != asynSuccess || nbytesTransfered != 1) {
             reportError(pasynRec, status,

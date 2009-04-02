@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * drvAsynIPServerPort.c,v 1.11 2007/04/23 19:35:50 rivers Exp
+ * drvAsynIPServerPort.c,v 1.13 2008/07/15 18:40:29 rivers Exp
  */
 
 #include <string.h>
@@ -180,7 +180,7 @@ static void connectionListener(void *drvPvt)
               "drvAsynIPServerPort: %s started listening for connections on %s\n", 
               tty->serverInfo);
     while (1) {
-        clientFd = accept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
+        clientFd = epicsSocketAccept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
                   "drvAsynIPServerPort: new connection, socket=%d on %s\n", 
                   clientFd, tty->serverInfo);
@@ -188,7 +188,7 @@ static void connectionListener(void *drvPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
-            break;
+            continue;
         }
         /* See if any clients have registered for callbacks.  If not, close the connection */
         pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
@@ -196,7 +196,7 @@ static void connectionListener(void *drvPvt)
         pasynManager->interruptEnd(tty->octetCallbackPvt);
         if (!pnode) {
             /* There are no registered clients to handle connections on this port */
-            close(clientFd);
+            epicsSocketDestroy(clientFd);
         }
         /* Search for a port we have already created which is now disconnected */
         pl = NULL;
@@ -212,8 +212,8 @@ static void connectionListener(void *drvPvt)
             if (tty->numClients >= tty->maxClients) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: %s: too many clients\n", tty->portName);
-                close(clientFd);
-                break;
+                epicsSocketDestroy(clientFd);
+                continue;
             }
             /* Create a new asyn port with a unique name */
             len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
@@ -231,7 +231,7 @@ static void connectionListener(void *drvPvt)
             if (status) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: unable to create port %s\n", pl->portName);
-                break;
+                continue;
             }
             status = pasynCommonSyncIO->connect(pl->portName, -1, &pl->pasynUser, NULL);
             if (status!=asynSuccess) {
@@ -239,7 +239,7 @@ static void connectionListener(void *drvPvt)
                     "%s drvAsynIPServerPort: error calling "
                     "pasynCommonSyncIO->connect %s\n",
                     pl->portName,pl->pasynUser->errorMessage);
-                break;
+                continue;
             }
         }
         /* Set the existing port to use the new file descriptor */

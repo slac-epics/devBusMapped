@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * drvAsynIPPort.c,v 1.37 2007/05/16 19:45:33 rivers Exp
+ * drvAsynIPPort.c,v 1.53 2008/07/02 21:02:06 norume Exp
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -71,6 +71,9 @@
 
 /* This delay is needed in cleanup() else sockets are not always really closed cleanly */
 #define CLOSE_SOCKET_DELAY 0.02
+/* This delay is how long to wait in seconds after a send fails with errno ==
+ * EAGAIN or EINTR before trying again */
+#define SEND_RETRY_DELAY 0.01
 
 /*
  * This structure holds the hardware-specific information for a single
@@ -144,17 +147,9 @@ static int setNonBlock(int fd, int nonBlockFlag)
     if ((flags = fcntl(fd, F_GETFL, 0)) < 0)
         return -1;
     if (nonBlockFlag)
-#ifdef __rtems__
-        flags |= (O_NONBLOCK | 0x1000);
-#else
         flags |= O_NONBLOCK;
-#endif
     else
-#ifdef __rtems__
-        flags &= ~(O_NONBLOCK | 0x1000); /* Here is a RTEMS bug, this is a work-around */
-#else
         flags &= ~O_NONBLOCK;
-#endif
     if (fcntl(fd, F_SETFL, flags) < 0)
         return -1;
 #endif
@@ -165,15 +160,15 @@ static int setNonBlock(int fd, int nonBlockFlag)
  * Close a connection
  */
 static void
-closeConnection(asynUser *pasynUser,ttyController_t *tty)
+closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "Close %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
     if (tty->fd >= 0) {
-        asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "Close %s connection.\n", tty->IPDeviceName);
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
-        pasynManager->exceptionDisconnect(pasynUser);
     }
+    pasynManager->exceptionDisconnect(pasynUser);
 }
 
 /*Beginning of asynCommon methods*/
@@ -186,10 +181,12 @@ report(void *drvPvt, FILE *fp, int details)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    fprintf(fp, "Port %s: %sonnected\n",
-        tty->IPDeviceName,
-        tty->fd >= 0 ? "C" : "Disc");
     if (details >= 1) {
+        fprintf(fp, "    Port %s: %sonnected\n",
+                                                tty->IPDeviceName,
+                                                tty->fd >= 0 ? "C" : "Disc");
+    }
+    if (details >= 2) {
         fprintf(fp, "                    fd: %d\n", tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
@@ -207,7 +204,7 @@ cleanup (void *arg)
 
     if (!tty) return;
     if (tty->fd >= 0) {
-        close(tty->fd);
+        epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         /* If this delay is not present then the sockets are not always really closed cleanly */
         epicsThreadSleep(CLOSE_SOCKET_DELAY);
@@ -221,30 +218,33 @@ static asynStatus
 connectIt(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    int fd;
     int i;
 
     /*
      * Sanity check
      */
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "Open connection to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+                                                           pasynUser->reason,
+                                                           tty->fd);
+
     if (tty->fd >= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "%s: Link already open!", tty->IPDeviceName);
         return asynError;
     }
 
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s\n", tty->IPDeviceName);
-
     /* If pasynUser->reason > 0) then use this as the file descriptor */
     if (pasynUser->reason > 0) {
-        tty->fd = pasynUser->reason;
+        fd = pasynUser->reason;
     } else {
 
         /*
          * Create the socket
          */
-        if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
+        if ((fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                   "Can't create socket: %s", strerror(SOCKERRNO));
             return asynError;
@@ -255,54 +255,40 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          */
         i = 1;
         if (tty->broadcastFlag
-         && (setsockopt(tty->fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
+         && (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't set %s socket BROADCAST option: %s\n",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(tty->fd);
-            tty->fd = -1;
+            epicsSocketDestroy(fd);
             return asynError;
         }
 
         /*
          * Connect to the remote host
          */
-
-        /* We don't use the timer, since it does nothing at present */
-        /* epicsTimerStartDelay(tty->timer, 10.0); */
-        i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
-        /* epicsTimerCancel(tty->timer); */
-        if (i < 0) {
+        if (connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(tty->fd);
-            tty->fd = -1;
+            epicsSocketDestroy(fd);
             return asynError;
         }
-
-        /*
-         * Register for socket cleanup
-         */
-        epicsAtExit(cleanup, tty);
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
-     && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
+     && (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket NODELAY option: %s\n",
                       tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(tty->fd);
-        tty->fd = -1;
+        epicsSocketDestroy(fd);
         return asynError;
     }
 #ifdef USE_POLL
-    if (setNonBlock(tty->fd, 1) < 0) {
+    if (setNonBlock(fd, 1) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s O_NONBLOCK option: %s\n",
                                        tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(tty->fd);
-        tty->fd = -1;
+        epicsSocketDestroy(fd);
         return asynError;
     }
 #endif
@@ -310,6 +296,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->IPDeviceName);
     pasynManager->exceptionConnect(pasynUser);
+    tty->fd = fd;
     return asynSuccess;
 }
 
@@ -319,9 +306,7 @@ disconnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s disconnect\n", tty->IPDeviceName);
-    closeConnection(pasynUser,tty);
+    closeConnection(pasynUser,tty,"Disconnect request");
     return asynSuccess;
 }
 
@@ -329,29 +314,32 @@ disconnect(void *drvPvt, asynUser *pasynUser)
 /*
  * Write to the TCP port
  */
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
     asynStatus status = asynSuccess;
     int writePollmsec;
+    int epicsTimeStatus;
+    epicsTimeStamp startTime;
+    epicsTimeStamp endTime;
+    int haveStartTime;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s write.\n", tty->IPDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                 "%s write %d\n", tty->IPDeviceName, numchars);
+    *nbytesTransfered = 0;
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s disconnected:", tty->IPDeviceName);
         return asynError;
     }
-    if (numchars == 0) {
-        *nbytesTransfered = 0;
+    if (numchars == 0)
         return asynSuccess;
-    }
-    writePollmsec = pasynUser->timeout * 1000.0;
+    writePollmsec = (int) (pasynUser->timeout * 1000.0);
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
@@ -367,48 +355,66 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     }
     }
 #endif
+    haveStartTime = 0;
+    for (;;) {
 #ifdef USE_POLL
-    {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
         poll(&pollfd, 1, writePollmsec);
-    }
 #endif
-    thisWrite = send(tty->fd, (char *)data, numchars, 0);
-    if (thisWrite > 0) {
-        tty->nWritten += thisWrite;
-        if (thisWrite != numchars) {
-            /* Is this a reliable indication of timeout on write? */
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s timeout", tty->IPDeviceName);
+        for (;;) {
+            thisWrite = send(tty->fd, (char *)data, numchars, 0);
+            if (thisWrite >= 0) break;
+            if (SOCKERRNO == SOCK_EWOULDBLOCK || SOCKERRNO == SOCK_EINTR) {
+                if (!haveStartTime) {
+                    epicsTimeStatus = epicsTimeGetCurrent(&startTime);
+                    assert(epicsTimeStatus == epicsTimeOK);
+                    haveStartTime = 1;
+                } else if (pasynUser->timeout >= 0) {
+                    epicsTimeStatus = epicsTimeGetCurrent(&endTime);
+                    assert(epicsTimeStatus == epicsTimeOK);
+                    if (epicsTimeDiffInSeconds(&endTime, &startTime) >
+                            pasynUser->timeout) {
+                        thisWrite = 0;
+                        break;
+                    }
+                }
+                epicsThreadSleep(SEND_RETRY_DELAY);
+            } else break;
+        }
+        if (thisWrite > 0) {
+            tty->nWritten += thisWrite;
+            *nbytesTransfered += thisWrite;
+            numchars -= thisWrite;
+            if (numchars == 0)
+                break;
+            data += thisWrite;
+        }
+        else if (thisWrite == 0) {
+            status = asynTimeout;
+            break;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s write error: %s", tty->IPDeviceName,
+                                                           strerror(SOCKERRNO));
+            closeConnection(pasynUser,tty,"Write error");
             status = asynError;
+            break;
         }
     }
-    if ((thisWrite < 0) && (SOCKERRNO != SOCK_EWOULDBLOCK)
-                        && (SOCKERRNO != SOCK_EINTR)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s write error: %s",
-                      tty->IPDeviceName, strerror(SOCKERRNO));
-        closeConnection(pasynUser,tty);
-        status = asynError;
-    }
-    /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
-    if ((thisWrite == 0) && (tty->socketType == SOCK_STREAM)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s connection closed",
-                      tty->IPDeviceName);
-        closeConnection(pasynUser,tty);
-        status = asynError;
-    }
-    *nbytesTransfered = thisWrite;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "wrote %lu to %s, return %s.\n", (unsigned long)*nbytesTransfered,
+                                               tty->IPDeviceName,
+                                               pasynManager->strStatus(status));
     return status;
 }
 
 /*
  * Read from the TCP port
  */
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -429,7 +435,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                   "%s maxchars %d. Why <=0?\n",tty->IPDeviceName,(int)maxchars);
         return asynError;
     }
-    readPollmsec = pasynUser->timeout * 1000.0;
+    readPollmsec = (int) (pasynUser->timeout * 1000.0);
     if (readPollmsec == 0) readPollmsec = 1;
     if (readPollmsec < 0) readPollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
@@ -465,7 +471,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            closeConnection(pasynUser,tty);
+            closeConnection(pasynUser,tty,"Read error");
             status = asynError;
         } else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -479,14 +485,14 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s connection closed",
                       tty->IPDeviceName);
-        closeConnection(pasynUser,tty);
+        closeConnection(pasynUser,tty,"Read from broken connection");
         status = asynError;
     }
     if (thisRead < 0)
         thisRead = 0;
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
-    if (thisRead < maxchars)
+    if (thisRead < (int) maxchars)
         data[thisRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
@@ -660,8 +666,8 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    pasynOctet->readRaw = readRaw;
-    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->read = readIt;
+    pasynOctet->write = writeIt;
     pasynOctet->flush = flushIt;
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = pasynOctet;
@@ -680,6 +686,11 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
+
+    /*
+     * Register for socket cleanup
+     */
+    epicsAtExit(cleanup, tty);
     return 0;
 }
 

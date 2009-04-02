@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * drvAsynSerialPort.c,v 1.42 2007/09/20 17:45:25 norume Exp
+ * drvAsynSerialPort.c,v 1.46 2008/05/28 18:58:52 norume Exp
  */
 
 #include <string.h>
@@ -619,7 +619,7 @@ setOption(void *drvPvt, asynUser *pasynUser,
 /*
  * Write to the serial line
  */
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -697,15 +697,17 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
     *nbytesTransfered = numchars - nleft;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s wrote %d, return %d\n",
-                            tty->serialDeviceName, *nbytesTransfered, status);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "wrote %lu to %s, return %s\n",
+                                            (unsigned long)*nbytesTransfered,
+                                            tty->serialDeviceName,
+                                            pasynManager->strStatus(status));
     return status;
 }
 
 /*
  * Read from the serial line
  */
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -895,7 +897,6 @@ drvAsynSerialPortConfigure(char *portName,
                      int noProcessEos)
 {
     ttyController_t *tty;
-    asynInterface *pasynInterface;
     asynStatus status;
     int nbytes;
     asynOctet *pasynOctet;
@@ -937,7 +938,6 @@ drvAsynSerialPortConfigure(char *portName,
     /*
      *  Link with higher level routines
      */
-    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynSerialPortConfigure");
     tty->common.interfaceType = asynCommonType;
     tty->common.pinterface  = (void *)&drvAsynSerialPortAsynCommon;
     tty->common.drvPvt = tty;
@@ -965,8 +965,8 @@ drvAsynSerialPortConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    pasynOctet->readRaw = readRaw;
-    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->read = readIt;
+    pasynOctet->write = writeIt;
     pasynOctet->flush = flushIt;
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = pasynOctet;

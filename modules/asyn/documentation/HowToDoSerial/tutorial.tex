@@ -1,9 +1,9 @@
-%% LyX 1.3 created this file.  For more info, see http://www.lyx.org/.
+%% LyX 1.5.6 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[twoside,english]{article}
-\usepackage{times}
+\usepackage{mathptmx}
 \usepackage[T1]{fontenc}
-\usepackage[latin1]{inputenc}
+\usepackage[latin9]{inputenc}
 \setcounter{tocdepth}{2}
 
 \makeatletter
@@ -13,16 +13,16 @@
 \providecommand{\tabularnewline}{\\}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
- \newenvironment{lyxcode}
-   {\begin{list}{}{
-     \setlength{\rightmargin}{\leftmargin}
-     \setlength{\listparindent}{0pt}% needed for AMS classes
-     \raggedright
-     \setlength{\itemsep}{0pt}
-     \setlength{\parsep}{0pt}
-     \normalfont\ttfamily}%
-    \item[]}
-   {\end{list}}
+\newenvironment{lyxcode}
+{\begin{list}{}{
+\setlength{\rightmargin}{\leftmargin}
+\setlength{\listparindent}{0pt}% needed for AMS classes
+\raggedright
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\normalfont\ttfamily}%
+ \item[]}
+{\end{list}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 \usepackage{hevea}
@@ -42,8 +42,10 @@
 \usepackage{hyperref}
 %HEVEA \def{\textbackslash}{$\backslash$} % No \textbackslash in hevea.
 
-\usepackage{babel}
 \makeatother
+
+\usepackage{babel}
+
 \begin{document}
 
 \title{How to create EPICS device support for a simple serial or GPIB device}
@@ -105,26 +107,23 @@ with them are shown in table~\ref{commandList}.
 
 %
 \begin{table}
-
 \caption{AB300 filter wheel commands\label{commandList}}
 
-\begin{center}\begin{tabular}{|l|l|}
+
+\begin{centering}
+\begin{tabular}{|l|l|}
 \hline 
 \multicolumn{2}{|l|}{CVI Laser Corporation AB300 filter wheel}\tabularnewline
 \hline
-\multicolumn{1}{|l|}{Command}&
-\multicolumn{1}{l|}{EPICS record type}\tabularnewline
+\multicolumn{1}{|l|}{Command} & \multicolumn{1}{l|}{EPICS record type}\tabularnewline
 \hline
-Reset &
-longout \tabularnewline
-Go to new position &
-longout \tabularnewline
-Query position &
-longin \tabularnewline
-Query status &
-longin  \tabularnewline
+Reset  & longout \tabularnewline
+Go to new position  & longout \tabularnewline
+Query position  & longin \tabularnewline
+Query status  & longin  \tabularnewline
 \hline
-\end{tabular}\end{center}
+\end{tabular}
+\par\end{centering}
 \end{table}
 
 
@@ -240,13 +239,13 @@ The elements of each entry are described using the names from the
 ~~~~~~~NULL,~0,~0,~NULL,~NULL,~\char`\"{}\textbackslash{}033\char`\"{}\},
 \end{lyxcode}
 \begin{description}
-\item [dset]This command is associated with an longout record. 
-\item [type]A WRITE operation is to be performed. 
-\item [pri]This operation will be placed on the low-priority queue of I/O
-requests. 
-\item [cmd]Because this is a GPIBWRITE operation this element is unused. 
-\item [format]The format string to generate the command to be sent to the
-device. The first two bytes are the RESET command, the third byte
+\item [{dset}] This command is associated with an longout record. 
+\item [{type}] A WRITE operation is to be performed. 
+\item [{pri}] This operation will be placed on the low-priority queue of
+I/O requests. 
+\item [{cmd}] Because this is a GPIBWRITE operation this element is unused. 
+\item [{format}] The format string to generate the command to be sent to
+the device. The first two bytes are the RESET command, the third byte
 is the ECHO command. The AB300 sends no response to a reset command
 so I send the 'ECHO' to verify that the device is responding. The
 AB300 resets itself fast enough that it can see an echo command immediately
@@ -257,16 +256,16 @@ Note that the process variable value is not used (there's no printf
 \texttt{\%} format character in the command string). The AB300 is
 reset whenever the EPICS record is processed. 
 
-\item [rspLen]The size of the readback buffer. Although only one readback
+\item [{rspLen}] The size of the readback buffer. Although only one readback
 byte is expected I allow for a few extra bytes just in case. 
-\item [msgLen]The size of the buffer into which the command string is placed.
-I allowed a little extra space in case a longer command is used some
-day. 
-\item [convert]No special conversion function is needed. 
-\item [P1,P2,P3]There's no special conversion function so no arguments
+\item [{msgLen}] The size of the buffer into which the command string is
+placed. I allowed a little extra space in case a longer command is
+used some day. 
+\item [{convert}] No special conversion function is needed. 
+\item [{P1,P2,P3}] There's no special conversion function so no arguments
 are needed. 
-\item [pdevGpibNames]There's no name table. 
-\item [eos]The end-of-string value used to mark the end of the readback
+\item [{pdevGpibNames}] There's no name table. 
+\item [{eos}] The end-of-string value used to mark the end of the readback
 operation. GPIB devices can usually leave this entry NULL since they
 use the End-Or-Identify (EOI) line to delimit messages.Serial devices
 which have the same end-of-string value for all commands couldalso
@@ -281,24 +280,24 @@ asynOctetSetInputEos command.
 ~~~~~~~~NULL,~0,~0,~NULL,~NULL,~\char`\"{}\textbackslash{}030\char`\"{}\},
 \end{lyxcode}
 \begin{description}
-\item [dset]This command is associated with an longout record. 
-\item [type]A WRITE operation is to be performed. 
-\item [pri]This operation will be placed on the low-priority queue of I/O
-requests. 
-\item [cmd]Because this is a GPIBWRITE operation this element is unused. 
-\item [format]The format string to generate the command to be sent to the
-device. The filter position (1-6) can be converted to the required
+\item [{dset}] This command is associated with an longout record. 
+\item [{type}] A WRITE operation is to be performed. 
+\item [{pri}] This operation will be placed on the low-priority queue of
+I/O requests. 
+\item [{cmd}] Because this is a GPIBWRITE operation this element is unused. 
+\item [{format}] The format string to generate the command to be sent to
+the device. The filter position (1-6) can be converted to the required
 command byte with the printf \texttt{\%c} format. 
-\item [rspLen]The size of the readback buffer. Although only two readback
+\item [{rspLen}] The size of the readback buffer. Although only two readback
 bytes are expected I allow for a few extra bytes just in case. 
-\item [msgLen]The size of the buffer into which the command string is placed.
-I allowed a little extra space in case a longer command is used some
-day. 
-\item [convert]No special conversion function is needed. 
-\item [P1,P2,P3]There's no special conversion function so no arguments
+\item [{msgLen}] The size of the buffer into which the command string is
+placed. I allowed a little extra space in case a longer command is
+used some day. 
+\item [{convert}] No special conversion function is needed. 
+\item [{P1,P2,P3}] There's no special conversion function so no arguments
 are needed. 
-\item [pdevGpibNames]There's no name table. 
-\item [eos]The end-of-string value used to mark the end of the readback
+\item [{pdevGpibNames}] There's no name table. 
+\item [{eos}] The end-of-string value used to mark the end of the readback
 operation. 
 \end{description}
 
@@ -309,24 +308,25 @@ operation.
 ~~~~~~~~convertPositionReply,~0,~0,~NULL,~NULL,~\char`\"{}\textbackslash{}030\char`\"{}\},
 \end{lyxcode}
 \begin{description}
-\item [dset]This command is associated with an longin record. 
-\item [type]A READ operation is to be performed. 
-\item [pri]This operation will be placed on the low-priority queue of I/O
-requests. 
-\item [cmd]The command string to be sent to the device. The AB300 responds
+\item [{dset}] This command is associated with an longin record. 
+\item [{type}] A READ operation is to be performed. 
+\item [{pri}] This operation will be placed on the low-priority queue of
+I/O requests. 
+\item [{cmd}] The command string to be sent to the device. The AB300 responds
 to this command by sending back three bytes: the current position,
 the controller status, and a terminating \texttt{'\textbackslash{}030'}. 
-\item [format]Because this operation has its own conversion function this
-element is unused. 
-\item [rspLen]There is no command echo to be read. 
-\item [msgLen]The size of the buffer into which the reply string is placed.
-Although only three reply bytes are expected I allow for a few extra
-bytes just in case.
-\item [convert]There's no sscanf format that can convert the reply from
+\item [{format}] Because this operation has its own conversion function
+this element is unused. 
+\item [{rspLen}] There is no command echo to be read. 
+\item [{msgLen}] The size of the buffer into which the reply string is
+placed. Although only three reply bytes are expected I allow for a
+few extra bytes just in case.
+\item [{convert}] There's no sscanf format that can convert the reply from
 the AB300 so a special conversion function must be provided. 
-\item [P1,P2,P3]The special conversion function requires no arguments. 
-\item [pdevGpibNames]There's no name table. 
-\item [eos]The end-of-string value used to mark the end of the read operation. 
+\item [{P1,P2,P3}] The special conversion function requires no arguments. 
+\item [{pdevGpibNames}] There's no name table. 
+\item [{eos}] The end-of-string value used to mark the end of the read
+operation. 
 \end{description}
 
 \paragraph{Command array index 3 -- Query controller status}
@@ -367,7 +367,7 @@ convertPositionReply(struct~gpibDpvt~{*}pdpvt,~int~P1,~int~P2,~char~{*}{*}P3)~\\
 ~~~~~~~~~~~~~~~~~~~~~~\char`\"{}Invalid~reply\char`\"{});~\\
 ~~~~~~~~return~-1;~\\
 ~~~~\}~\\
-~~~~pli->val~=~pdpvt->msg{[}0{]};~\\
+~~~~pli->val~=~pdpvt->msg{[}0];~\\
 ~~~~return~0;~\\
 \}~\\
 static~int~\\
@@ -381,7 +381,7 @@ convertStatusReply(struct~gpibDpvt~{*}pdpvt,~int~P1,~int~P2,~char~{*}{*}P3)~\\
 ~~~~~~~~~~~~~~~~~~~~~~\char`\"{}Invalid~reply\char`\"{});~\\
 ~~~~~~~~return~-1;~\\
 ~~~~\}~\\
-~~~~pli->val~=~pdpvt->msg{[}1{]};~\\
+~~~~pli->val~=~pdpvt->msg{[}1];~\\
 ~~~~return~0;~\\
 \}
 \end{lyxcode}
@@ -552,7 +552,8 @@ there:\\
 \textit{xxx}\_DBD += drvAsynIPPort.dbd\\
 \textit{xxx}\_DBD += drvAsynSerialPort.dbd\\
 .\\
-.
+.\\
+This is the preferred method.
 \end{enumerate}
 
 \subsection{Add the device support libraries to the application}
@@ -679,7 +680,7 @@ asynSetTraceIOMask(\char`\"{}L0\char`\"{},-1,0x2)~\\
 iocInit()~\\
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#~\\
 \#\#\#~~EPICS~IOC~CORE~built~on~Apr~23~2004~\\
-\#\#\#~~EPICS~R3.14.6~\$\$Name: asyn-R4-7-1-lcls3 $\$~\$\$Date: 2006/04/24 13:13:07 $\$~\\
+\#\#\#~~EPICS~R3.14.6~~2008/03/25~18:06:21~\\
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#~\\
 Starting~iocInit~\\
 iocInit:~All~initialization~complete
@@ -814,7 +815,7 @@ medm with \texttt{P}, \texttt{R}, \texttt{PORT} and \texttt{ADDR}
 values matching those given in the \texttt{dbLoadRecords} command:
 
 \begin{lyxcode}
-medm~-x~-macro~\char`\"{}P=AB300,R=Test,PORT=L0,ADDR=0\char`\"{}~asynRecord.adl
+medm~-x~-macro~\char`\"{}P=AB300,R=Test\char`\"{}~asynRecord.adl
 \end{lyxcode}
 
 \section{Support for devices with common 'end-of-string' characters}
@@ -849,6 +850,7 @@ and that the table 'eos' field is \texttt{NULL}:
 \begin{lyxcode}
 /{*}~2~:~read~delay~:~AI~{*}/~\\
 ~~\{\&DSET\_AI,~GPIBREAD,~IB\_Q\_LOW,~\char`\"{}HOR:DEL:TIM?\char`\"{},~\char`\"{}\%lf\char`\"{},~0,~20,~\\
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~NULL,~0,~0,~NULL,~NULL,~NULL\},\end{lyxcode}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~NULL,~0,~0,~NULL,~NULL,~NULL\},
+\end{lyxcode}
 
 \end{document}
