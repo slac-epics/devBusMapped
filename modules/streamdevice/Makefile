@@ -1,19 +1,11 @@
 TOP = .
 
-DIRS = src
+DIRS = configure src
 
-# Look if we have EPICS R3.13 or R3.14
-ifeq ($(wildcard $(TOP)/configure),)
-  # EPICS R3.13
-  include $(TOP)/config/CONFIG_APP
-  CONFIG = $(TOP)/config
-else
-  # EPICS R3.14
-  include $(TOP)/configure/CONFIG
-  ifneq ($(words $(CALC) $(SYNAPPS)), 0)
-    # with synApps calc module (contains scalcout)
-    DIRS += srcSynApps
-  endif
+include $(TOP)/configure/CONFIG
+ifneq ($(words $(CALC) $(SYNAPPS)), 0)
+  # with synApps calc module (contains scalcout)
+  DIRS += srcSynApps
 endif
 
 DIRS += streamApp

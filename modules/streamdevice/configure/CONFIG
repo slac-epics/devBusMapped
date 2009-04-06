@@ -12,7 +12,6 @@ CONFIG=$(EPICS_BASE)/configure
 include $(CONFIG)/CONFIG
 
 # Override for definition in base
-INSTALL_LOCATION = $(TOP)
 include $(TOP)/configure/CONFIG_SITE
 -include $(TOP)/configure/CONFIG_SITE.$(EPICS_HOST_ARCH)
 -include $(TOP)/configure/CONFIG_SITE.$(EPICS_HOST_ARCH).Common
