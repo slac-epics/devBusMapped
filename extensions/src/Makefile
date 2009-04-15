@@ -28,15 +28,15 @@ TOP = ..
 include $(TOP)/configure/CONFIG
 
 DIRS += edm
-DIRS += ChannelWatcher
+#DIRS += ChannelWatcher
 DIRS += StripTool
-DIRS += alh
+#DIRS += alh
 DIRS += km
 DIRS += labca
 DIRS += probe
 DIRS += msi
 DIRS += dbreport
-DIRS += iocLogAndFwdServer
+#DIRS += iocLogAndFwdServer
 DIRS += ts
 DIRS += gnuregex
 DIRS += gateway

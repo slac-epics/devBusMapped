@@ -1,9 +1,12 @@
 TOP := ../..
 include $(TOP)/configure/CONFIG
 
+# Note: cannot build for 64bits because we don't have the Acqiris driver
+ifeq ($(T_A),linux-x86)
 LIBRARY := acqiris_support
 
 DBD += acqiris_support.dbd
+endif
 
 LIBSRCS += acqiris_dev_li.cpp
 LIBSRCS += acqiris_dev_lo.cpp

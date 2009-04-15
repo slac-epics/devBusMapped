@@ -8,20 +8,20 @@
 #       If you do not have a certain product,
 #       leave the line empty.
 #
-$(error found me)
+
 -include $(TOP)/configure/os/CONFIG_SITE.Common.Common
 
-X11_LIB=/usr/X11R6/lib
+X11_LIB=/usr/X11R6/lib64
 X11_INC=/usr/X11R6/include/X11
-MOTIF_LIB=/usr/X11R6/lib
+MOTIF_LIB=/usr/X11R6/lib64
 MOTIF_INC=/usr/X11R6/include
 # needed by EDM (ungif and png)
-GIF_LIB=/usr/lib
+GIF_LIB=/usr/lib64
 GIF_INC=/usr/include
-PNG_LIB=/usr/lib
+PNG_LIB=/usr/lib64
 PNG_INC=/usr/include
 # added XPM for StripTool
-XPM_LIB = /usr/X11R6/lib
+XPM_LIB = /usr/X11R6/lib64
 XPM_INC = /usr/X11R6/include
 
 #OPENWIN =
@@ -33,10 +33,10 @@ XPM_INC = /usr/X11R6/include
 #TK_TCL = /usr/lib
 #IDL =
 
-CMLOG = /pcds/package/cmlog
-CMLOG_INC = $(CMLOG)/include
-CMLOG_LIB = $(CMLOG)/lib/Linux-i386
-CMLOG_BIN = $(CMLOG)/bin/Linux-i386
+#CMLOG = /pcds/package/cmlog
+#CMLOG_INC = $(CMLOG)/include
+#CMLOG_LIB = $(CMLOG)/lib/Linux-i386
+#CMLOG_BIN = $(CMLOG)/bin/Linux-i386
 
 #MATLAB = /afs/slac/package/matlab/linux/14.3
 #MATLAB_ARCH_EXT = glx
