@@ -33,9 +33,7 @@ endif
 
 I_WANT_CDEV             = NO
 I_WANT_GREETINGS        = NO
-#I_WANT_CMLOG		= NO
-# JROCK SLAC YES TO CMLOG!
-I_WANT_CMLOG		= YES
+I_WANT_CMLOG		= NO
 
 # These should really be done in <TOP>/config/RELEASE, but
 # defining things here overrides these values.

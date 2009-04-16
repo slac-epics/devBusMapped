@@ -30,7 +30,7 @@ include $(TOP)/configure/CONFIG
 DIRS += edm
 #DIRS += ChannelWatcher
 DIRS += StripTool
-#DIRS += alh
+DIRS += alh
 DIRS += km
 DIRS += labca
 DIRS += probe

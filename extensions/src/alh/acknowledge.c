@@ -30,9 +30,11 @@ extern int _global_flag;
 extern int _DB_call_flag;
 extern char * alhAlarmSeverityString[];
 extern const char *executionModeString[];
+
+#ifdef CMLOG
 /* JROCK SLAC wordy cmlog flag, from file.c */
 extern int _wordyCMLOG_flag;
-
+#endif
 
 /*************************************************************    
  * channel acknowledgement
@@ -101,6 +103,7 @@ XmAnyCallbackStruct * cbs)
 	if (line->linkType == GROUP) {
 		glink = (GLINK *)(line->link);
 		if (glink->pgroupData->unackSevr == NO_ALARM) return;
+#ifdef CMLOG
                 /* JROCK SLAC wordy cmlog message add group name */
                 if (_wordyCMLOG_flag)
   		   alLogOpModAckMessage(ACK_GROUP,(GCLINK*)glink,
@@ -109,6 +112,7 @@ XmAnyCallbackStruct * cbs)
                            glink->pgroupData->name,
 			   alhAlarmSeverityString[line->unackSevr]);
                 else
+#endif
 		   alLogOpModAckMessage(ACK_GROUP,(GCLINK*)glink,
 			   "%s Ack Group (%s)",
 			   executionModeString[_global_flag],
@@ -118,6 +122,7 @@ XmAnyCallbackStruct * cbs)
 		clink = (CLINK *)(line->link);
 		if (clink->pchanData->unackSevr == NO_ALARM) return;
                 /* JROCK SLAC wordy cmlog message add channel name */
+#ifdef CMLOG
                 if (_wordyCMLOG_flag)
 		   alLogOpModAckMessage(ACK_CHANNEL,(GCLINK*)clink,
 			   "%s Ack Channel %s (%s)",
@@ -125,6 +130,7 @@ XmAnyCallbackStruct * cbs)
                            clink->pchanData->name,
 			   alhAlarmSeverityString[line->unackSevr]);
                 else
+#endif
 		   alLogOpModAckMessage(ACK_CHANNEL,(GCLINK*)clink,
 			   "%s Ack Channel (%s)",
 			   executionModeString[_global_flag],
