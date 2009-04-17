@@ -39,6 +39,7 @@ DIRS+=calc
 DIRS+=epm2000
 DIRS+=ssi
 DIRS+=plcAdmin
+DIRS+=devBusMapped
 
 all:
 
