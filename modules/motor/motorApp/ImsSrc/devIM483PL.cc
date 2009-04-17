@@ -113,7 +113,7 @@ static struct board_stat **IM483PL_cards;
 STATIC long IM483PL_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

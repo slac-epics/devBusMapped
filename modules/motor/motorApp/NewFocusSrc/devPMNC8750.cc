@@ -114,7 +114,7 @@ static struct board_stat **PMNC8750_cards;
 STATIC long PMNC8750_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

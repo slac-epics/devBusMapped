@@ -86,7 +86,7 @@ static const char errmsg[] = {"\n\n!!!ERROR!!! - Oms58 driver uninitialized.\n"}
 
 static long oms_init(void *arg)
 {
-    int after = (int) arg;
+    long after = (long) arg;
     if (*(oms58_access.init_indicator) == NO)
     {
 	errlogSevPrintf(errlogMinor, "%s", errmsg);

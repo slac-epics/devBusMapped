@@ -109,7 +109,7 @@ static struct board_stat **PC6K_cards;
 STATIC long PC6K_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

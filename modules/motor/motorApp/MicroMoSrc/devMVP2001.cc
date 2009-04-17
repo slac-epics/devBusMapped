@@ -158,7 +158,7 @@ static struct board_stat **MVP2001_cards;
 static long MVP2001_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

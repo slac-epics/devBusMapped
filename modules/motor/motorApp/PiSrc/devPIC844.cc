@@ -107,7 +107,7 @@ static struct board_stat **PIC844_cards;
 static long PIC844_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

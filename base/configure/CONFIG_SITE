@@ -95,7 +95,7 @@
 #
 #CROSS_COMPILER_TARGET_ARCHS=
 #CROSS_COMPILER_TARGET_ARCHS=vxWorks6-ppc604_long
-CROSS_COMPILER_TARGET_ARCHS=RTEMS-beatnik
+CROSS_COMPILER_TARGET_ARCHS=linux-x86 RTEMS-beatnik
 
 #  If only a subset of the host architectures perform
 #  the build for the CROSS_COMPILER_TARGET_ARCHS

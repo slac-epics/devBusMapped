@@ -110,7 +110,7 @@ static struct board_stat **EMC18011_cards;
 STATIC long EMC18011_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

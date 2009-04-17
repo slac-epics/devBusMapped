@@ -105,7 +105,7 @@ static struct board_stat **PIC630_cards;
 static long PIC630_init(void *arg)
 {
     long rtnval;
-	int after = (int) arg;
+	long after = (long) arg;
 
     Debug(5, "PIC630_init: entry\n");
     if (after == 0)

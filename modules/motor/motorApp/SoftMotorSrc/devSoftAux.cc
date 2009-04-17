@@ -79,7 +79,7 @@ STATIC void soft_rinp(struct event_handler_args args)
 
 long soft_init(void *after)
 {
-    int before_after = (int) after;
+    long before_after = (long) after;
     if (before_after == 0)
     {
 	epicsThreadId dbCaTask_tid;

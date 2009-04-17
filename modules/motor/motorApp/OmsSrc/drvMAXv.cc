@@ -184,8 +184,8 @@ static long report(int level)
             if (brdptr == NULL)
                 printf("    Oms MAXv motor card #%d not found.\n", card);
             else
-                printf("    Oms MAXv motor card #%d @ 0x%X, id: %s \n", card,
-                       (epicsUInt32) motor_state[card]->localaddr,
+                printf("    Oms MAXv motor card #%d @ 0x%lX, id: %s \n", card,
+                       (unsigned long) motor_state[card]->localaddr,
                        motor_state[card]->ident);
         }
     }
@@ -728,10 +728,10 @@ RTN_VALUES MAXvSetup(int num_cards,     /* maximum number of cards in rack */
     {
         case 16:
             MAXv_ADDRS_TYPE = atVMEA16;
-            if ((epicsUInt32) addrs & 0xFFFF0000)
+            if ((unsigned long) addrs & 0xFFFF0000)
             {
-                errlogPrintf("MAXvSetup(): invalid A16 address = 0x%X.\n",
-                             (epicsUInt32) addrs);
+                errlogPrintf("MAXvSetup(): invalid A16 address = 0x%lX.\n",
+                             (unsigned long) addrs);
                 rtnind = ERROR;
             }
             else
@@ -739,10 +739,10 @@ RTN_VALUES MAXvSetup(int num_cards,     /* maximum number of cards in rack */
             break;
         case 24:
             MAXv_ADDRS_TYPE = atVMEA24;
-            if ((epicsUInt32) addrs & 0xF0000000)
+            if ((unsigned long) addrs & 0xF0000000)
             {
-                errlogPrintf("MAXvSetup(): invalid A24 address = 0x%X.\n",
-                             (epicsUInt32) addrs);
+                errlogPrintf("MAXvSetup(): invalid A24 address = 0x%lX.\n",
+                             (unsigned long) addrs);
                 rtnind = ERROR;
             }
             else
@@ -758,10 +758,10 @@ RTN_VALUES MAXvSetup(int num_cards,     /* maximum number of cards in rack */
             break;
     }
 
-    if ((epicsUInt32) addrs & 0x00000FFF)
+    if ((unsigned long) addrs & 0x00000FFF)
     {
-        errlogPrintf("MAXvSetup(): address = 0x%X, not aligned on 4K boundary.\n",
-                     (epicsUInt32) addrs);
+        errlogPrintf("MAXvSetup(): address = 0x%lX, not aligned on 4K boundary.\n",
+                     (unsigned long) addrs);
         rtnind = ERROR;
     }
 
