@@ -70,6 +70,12 @@ MSI=$(EPICS_EXTENSIONS)/bin/$(EPICS_HOST_ARCH)/msi
 EXTERNAL_PACKAGES=/reg/g/pcds/package
 
 # =============================================================
+# Location of RTEMS
+# =============================================================
+RTEMS_SITE_TOP=$(EXTERNAL_PACKAGES)/rtems
+RTEMS_VER=rtems-4.7.1
+
+# =============================================================
 # Location of the PCDS development tools that are not part of 
 # EPICS (but are provided in this repository).
 # Note: scripts expect TOOLS_MODULE_VERSION to be self described

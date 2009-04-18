@@ -18,8 +18,8 @@ COMMANDLINE_LIBRARY = LIBTECLA
 # Where to find RTEMS and specify version as well:
 # 2 cases:
 # RTEMS_SITE_TOP is defined: we use it
-# otherwise use /pcds/package/rtems
-RTEMS_SITE_TOP?=/pcds/package/rtems
+# otherwise we bail out
+RTEMS_SITE_TOP?=/please/define/RTEMS_SITE_TOP
 ifeq ($(shell if [ ! -d $(RTEMS_SITE_TOP) ]; then echo error; fi),error)
 $(error RTEMS_SITE_TOP="$(RTEMS_SITE_TOP)" does not exist)
 endif
