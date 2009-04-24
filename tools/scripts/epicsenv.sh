@@ -58,12 +58,13 @@ export LD_LIBRARY_PATH
 
 # The following setup is for EDM
 export EDMWEBBROWSER=mozilla
-export EDMFILES=${EPICS_EXTENSIONS}/src/edm/config
-export EDMHELPFILES=${EPICS_EXTENSIONS}/src/edm/helpFiles
+export EDMFILES=${EPICS_EXTENSIONS}/templates/edm
+export EDMHELPFILES=${EPICS_EXTENSIONS}/helpFiles
 export EDMUSERLIB=${EPICS_EXTENSIONS}/lib/${EPICS_HOST_ARCH}
 export EDMOBJECTS=$EDMFILES
 export EDMPVOBJECTS=$EDMFILES
 export EDMFILTERS=$EDMFILES
+export EDMLIBS=$EDMUSERLIB
 
 # The following setup is for vdct
 # WARNING: java-1.6.0-sun must be installed on the machine running vdct!!!
