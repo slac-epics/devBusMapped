@@ -55,12 +55,13 @@ setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:${EPICS_EXTENSIONS}/lib/${EPICS_HOST_
 
 # The following setup is for EDM
 setenv EDMWEBBROWSER mozilla
-setenv EDMFILES ${EPICS_EXTENSIONS}/src/edm/config
-setenv EDMHELPFILES ${EPICS_EXTENSIONS}/src/edm/helpFiles
+setenv EDMFILES ${EPICS_EXTENSIONS}/templates/edm
+setenv EDMHELPFILES ${EPICS_EXTENSIONS}/helpFiles
 setenv EDMUSERLIB ${EPICS_EXTENSIONS}/lib/${EPICS_HOST_ARCH}
 setenv EDMOBJECTS $EDMFILES
 setenv EDMPVOBJECTS $EDMFILES
 setenv EDMFILTERS $EDMFILES
+setenv EDMLIBS $EDMUSERLIB
 
 # The following setup is for vdct
 # WARNING: java-1.6.0-sun must be installed on the machine running vdct!!!
