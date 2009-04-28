@@ -3,9 +3,9 @@ FILENAME...	devPIE710.cc
 USAGE...	Motor record device level support for Physik Instrumente (PI)
 		GmbH & Co. E-710 motor controller.
 
-Version:	1.1
+Version:	1.2
 Modified By:	sullivan
-Last Modified:	2006/10/06 18:18:21
+Last Modified:	2006/12/18 17:42:56
 */
 
 /*
@@ -108,7 +108,7 @@ static struct board_stat **PIE710_cards;
 static long PIE710_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {
@@ -125,6 +125,9 @@ static long PIE710_init(void *arg)
 static long PIE710_init_record(void *arg)
 {
     struct motorRecord *mr = (struct motorRecord *) arg;
+    /* Disable change of direction testing in record support */
+    /* This is a closed-loop device */
+    mr->ntm = menuYesNoNO;
     return(motor_init_record_com(mr, *drvtabptr->cardcnt_ptr, drvtabptr, PIE710_cards));
 }
 

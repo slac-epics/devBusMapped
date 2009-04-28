@@ -19,9 +19,9 @@
  *     of this distribution.
  *     ************************************************************************
  *
- * Version: 1.13
- * Modified by: rivers
- * Last Modified: 2006/09/06 15:44:35
+ * Version: 1.17
+ * Modified by: peterd
+ * Last Modified: 2007/11/23 13:47:00
  *
  * Original Author: Peter Denison
  * Current Author: Peter Denison
@@ -171,7 +171,6 @@ static asynStatus disconnect        (void *drvPvt, asynUser *pasynUser);
 
 /* These are private functions, not used in any interfaces */
 static void intCallback(void *drvPvt, unsigned int num, unsigned int *changed);
-static void setDefaults(drvmotorAxisPvt *pAxis);
 static int config      (drvmotorPvt *pPvt);
 static int logFunc     (void *userParam,
                         const motorAxisLogMask_t logMask,
@@ -216,13 +215,12 @@ static asynUser *defaultAsynUser;
 
 
 int drvAsynMotorConfigure(const char *portName, const char *driverName,
-			  int card, int num_axes, int can_block)
+			  int card, int num_axes)
 {
     drvmotorPvt *pPvt;
     drvmotorAxisPvt *pAxis;
     asynStatus status;
     int i;
-    int attributes;
 
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "drvAsynMotorConfigure");
     pPvt->portName = epicsStrDup(portName);
@@ -252,12 +250,8 @@ int drvAsynMotorConfigure(const char *portName, const char *driverName,
     pPvt->drvUser.pinterface  = (void *)&drvMotorDrvUser;
     pPvt->drvUser.drvPvt = pPvt;
 
-    attributes = ASYN_MULTIDEVICE;
-    if (can_block) {
-	attributes |= ASYN_CANBLOCK;
-    }
     status = pasynManager->registerPort(portName,
-                                        attributes,
+                                        ASYN_MULTIDEVICE | ASYN_CANBLOCK,
                                         1,  /*  autoconnect */
                                         0,  /* medium priority */
                                         0); /* default stack size */
@@ -344,7 +338,7 @@ int drvAsynMotorConfigure(const char *portName, const char *driverName,
 	    (*pPvt->drvset->setCallback)(pAxis->axis, intCallback, (void *)pAxis);
             (*pPvt->drvset->setLog)(pAxis->axis, logFunc, pAxis->pasynUser);
 	}
-	setDefaults(pAxis);
+	/* All other axis parameters are initialised to zero at allocation */
     }
     /* Create a fallback asynUser for logging, but only the first time */
     if (!defaultAsynUser) {
@@ -569,12 +563,15 @@ static asynStatus writeFloat64(void *drvPvt, asynUser *pasynUser,
 	break;
     case motorVelocity:
 	pAxis->max_velocity = value;
+	status = asynSuccess;
 	break;
     case motorVelBase:
 	pAxis->min_velocity = value;
+	status = asynSuccess;
 	break;
     case motorAccel:
 	pAxis->accel = value;
+	status = asynSuccess;
 	break;
     case motorPosition:
     case motorResolution:
@@ -632,13 +629,6 @@ static asynStatus readMotorStatus(void *drvPvt, asynUser *pasynUser,
     return(asynSuccess);
 }
 
-static void setDefaults(drvmotorAxisPvt *pAxis)
-{
-    pAxis->max_velocity = 200.0;
-    pAxis->min_velocity = 0.0;
-    pAxis->accel = 100.0;
-}
-
 static int logFunc(void *userParam,
                    const motorAxisLogMask_t logMask,
                    const char *pFormat, ...)
@@ -745,7 +735,7 @@ static void intCallback(void *axisPvt, unsigned int nChanged,
 	if (addr == pAxis->num) {
 	    pmotorStatusInterrupt->callback(pmotorStatusInterrupt->userPvt, 
 					    pmotorStatusInterrupt->pasynUser,
-					    &pAxis->status );
+					    &pAxis->status);
 	}
 	pnode = (interruptNode *)ellNext(&pnode->node);
     }
@@ -928,17 +918,15 @@ static const iocshArg initArg0 = { "portName",iocshArgString};
 static const iocshArg initArg1 = { "driverName",iocshArgString};
 static const iocshArg initArg2 = { "cardNum",iocshArgInt};
 static const iocshArg initArg3 = { "numAxes",iocshArgInt};
-static const iocshArg initArg4 = { "canBlock",iocshArgInt};
-static const iocshArg * const initArgs[5] = {&initArg0,
+static const iocshArg * const initArgs[4] = {&initArg0,
                                              &initArg1,
 					     &initArg2,
-					     &initArg3,
-					     &initArg4};
-static const iocshFuncDef initFuncDef = {"drvAsynMotorConfigure",5,initArgs};
+					     &initArg3};
+static const iocshFuncDef initFuncDef = {"drvAsynMotorConfigure",4,initArgs};
 static void initCallFunc(const iocshArgBuf *args)
 {
     drvAsynMotorConfigure(args[0].sval, args[1].sval, args[2].ival,
-			  args[3].ival, args[4].ival);
+			  args[3].ival);
 }
 
 void motorRegister(void)

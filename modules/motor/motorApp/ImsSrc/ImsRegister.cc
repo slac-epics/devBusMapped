@@ -44,10 +44,12 @@ static const iocshArg * const IM483ConfigArgs[2] = {&configArg0, &configArg1};
 static const iocshFuncDef setupIM483SM = {"IM483SMSetup", 2, IM483SetupArgs};
 static const iocshFuncDef setupIM483PL = {"IM483PLSetup", 2, IM483SetupArgs};
 static const iocshFuncDef setupMDrive  = {"MDriveSetup",  2, IM483SetupArgs};
+static const iocshFuncDef setupMDrivePlus  = {"MDrivePlusSetup",  2, IM483SetupArgs};
 
 static const iocshFuncDef configIM483SM = {"IM483SMConfig", 2, IM483ConfigArgs};
 static const iocshFuncDef configIM483PL = {"IM483PLConfig", 2, IM483ConfigArgs};
 static const iocshFuncDef configMDrive  = {"MDriveConfig",  2, IM483ConfigArgs};
+static const iocshFuncDef configMDrivePlus  = {"MDrivePlusConfig",  2, IM483ConfigArgs};
 
 static void setupSMCallFunc(const iocshArgBuf *args)
 {
@@ -60,6 +62,10 @@ static void setupPLCallFunc(const iocshArgBuf *args)
 static void setupMDriveCallFunc(const iocshArgBuf *args)
 {
     MDriveSetup(args[0].ival, args[1].ival);
+}
+static void setupMDrivePlusCallFunc(const iocshArgBuf *args)
+{
+    MDrivePlusSetup(args[0].ival, args[1].ival);
 }
 
 
@@ -75,6 +81,10 @@ static void configMDriveCallFunc(const iocshArgBuf *args)
 {
     MDriveConfig(args[0].ival, args[1].sval);
 }
+static void configMDrivePlusCallFunc(const iocshArgBuf *args)
+{
+    MDrivePlusConfig(args[0].ival, args[1].sval);
+}
 
 
 static void IMSmotorRegister(void)
@@ -82,12 +92,15 @@ static void IMSmotorRegister(void)
     iocshRegister(&setupIM483SM, setupSMCallFunc);
     iocshRegister(&setupIM483PL, setupPLCallFunc);
     iocshRegister(&setupMDrive,  setupMDriveCallFunc);
+    iocshRegister(&setupMDrivePlus,  setupMDrivePlusCallFunc);
 
     iocshRegister(&configIM483SM, configSMCallFunc);
     iocshRegister(&configIM483PL, configPLCallFunc);
     iocshRegister(&configMDrive,  configMDriveCallFunc);
+    iocshRegister(&configMDrivePlus,  configMDrivePlusCallFunc);
 }
 
 epicsExportRegistrar(IMSmotorRegister);
 
 } // extern "C"
+

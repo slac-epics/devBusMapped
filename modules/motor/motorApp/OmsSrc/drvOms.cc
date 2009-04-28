@@ -208,8 +208,8 @@ static long report(int level)
     {
 	for (card = 0; card < oms44_num_cards; card++)
 	    if (motor_state[card])
-		printf("    Oms VME8/44 motor card %d @ 0x%lX, id: %s \n", card,
-		       (unsigned long) motor_state[card]->localaddr,
+		printf("    Oms VME8/44 motor card %d @ 0x%X, id: %s \n", card,
+		       (epicsUInt32) motor_state[card]->localaddr,
 		       motor_state[card]->ident);
     }
     return (0);
@@ -641,7 +641,7 @@ static int omsGet(int card, char *pchar, bool timeout)
 	}
 	if (!irqdata->recv_rng->isEmpty())
 	{
-	    *pchar = (char) ((unsigned long) irqdata->recv_rng->pop() & 0xFF);
+	    *pchar = (char) ((epicsUInt32) irqdata->recv_rng->pop() & 0xFF);
 	    getCnt = 1;
 	}
     }
@@ -845,7 +845,7 @@ static void motorIsr(int card)
 	if (irqdata->send_rng->isEmpty())
 	    control &= ~IRQ_TRANS_BUF;	/* Transmit done - disable irq */
 	else
-	    pmotor->data = (char) ((unsigned long) irqdata->send_rng->pop() & 0xFF);
+	    pmotor->data = (char) ((epicsUInt32) irqdata->send_rng->pop() & 0xFF);
     }
 
     /* Read Response */
@@ -984,7 +984,7 @@ int omsSetup(int num_cards,	/* maximum number of cards in rack */
 	oms44_num_cards = num_cards;
 
     /* Check boundary(16byte) on base address */
-    if ((unsigned long) addrs & 0xF)
+    if ((epicsUInt32) addrs & 0xF)
     {
 	Debug(1, "omsSetup: invalid base address 0x%X\n", (epicsUInt32) addrs);
 	oms_addrs = (char *) OMS_NUM_ADDRS;

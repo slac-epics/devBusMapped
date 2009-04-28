@@ -115,7 +115,7 @@ static struct board_stat **MDrive_cards;
 STATIC long MDrive_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {

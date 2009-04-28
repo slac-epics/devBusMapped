@@ -109,7 +109,7 @@ static struct board_stat **ESP300_cards;
 static long ESP300_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {

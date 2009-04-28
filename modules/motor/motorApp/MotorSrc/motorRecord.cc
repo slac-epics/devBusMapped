@@ -2,9 +2,9 @@
 FILENAME...	motorRecord.cc
 USAGE...	Motor Record Support.
 
-Version:	1.33
-Modified By:	peterd
-Last Modified:	2006/07/01 20:08:56
+Version:	1.43
+Modified By:	sluiter
+Last Modified:	2007/11/27 17:53:42
 */
 
 /*
@@ -89,9 +89,22 @@ Last Modified:	2006/07/01 20:08:56
  *                    status update.
  * .29 06-30-06 rls - Change do_work() test for "don't move if within RDBD",
  *                    from float to integer; avoid equality test errors.
+ * .30 03-16-07 rls - Clear home request when soft-limit violation occurs.
+ * .31 04-06-07 rls - RDBD was being used in motordevCom.cc
+ *                    motor_init_record_com() before the validation check.
+ * .40 11-02-07 pnd - Use absolute value of mres to calculate rdbdpos
+ * .41 11-06-07 rls - Do relative moves only if retries are enabled (RTRY != 0).
+ *                  - Change NTM logic to use reference positions rather than
+ *                    feedback (readback). This eliminates unwanted MR stop
+ *                    commands with DC servoing.
+ *                  - Do not post process previous move on "tdir" detection.
+ *                    Clear post process indicator (pp). This fixes long moves
+ *                    at backlash velocity after a new target position.
+ * .42 11-23-07 pnd - Correct use of MRES in NTM logic to use absolute value
+ * .43 11-27-07 rls - Set VBAS before jogging.
  */
 
-#define VERSION 6.0
+#define VERSION 6.3
 
 #include	<stdlib.h>
 #include	<string.h>
@@ -471,6 +484,7 @@ static long init_record(dbCommon* arg, int pass)
      * sure things are sane.
      */
     check_speed_and_resolution(pmr);
+    enforceMinRetryDeadband(pmr);
 
     /* Call device support to initialize itself and the driver */
     if (pdset->base.init_record)
@@ -526,7 +540,6 @@ static long init_record(dbCommon* arg, int pass)
     }
 
     process_motor_info(pmr, true);
-    enforceMinRetryDeadband(pmr);
 
     /*
      * If we're in closed-loop mode, initializing the user- and dial-coordinate
@@ -721,7 +734,7 @@ static long postProcess(motorRecord * pmr)
 
 	    /* Use if encoder or ReadbackLink is in use. */
 	    msta.All = pmr->msta;
-	    int use_rel = (msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip;
+	    bool use_rel = (pmr->rtry != 0 && (msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip);
 	    double relpos = pmr->diff / pmr->mres;
 	    double relbpos = ((pmr->dval - pmr->bdst) - pmr->drbv) / pmr->mres;
 
@@ -741,7 +754,7 @@ static long postProcess(motorRecord * pmr)
 		WRITE_MSG(SET_VELOCITY, &vel);
 		if (acc > 0.0)	/* Don't SET_ACCEL if vel = vbase. */
 		    WRITE_MSG(SET_ACCEL, &acc);
-		if (use_rel)
+		if (use_rel == true)
 		    WRITE_MSG(MOVE_REL, &relbpos);
 		else
 		    WRITE_MSG(MOVE_ABS, &bpos);
@@ -757,7 +770,7 @@ static long postProcess(motorRecord * pmr)
 		WRITE_MSG(SET_VELOCITY, &bvel);
 		if (bacc > 0.0)	/* Don't SET_ACCEL if bvel = vbase. */
 		    WRITE_MSG(SET_ACCEL, &bacc);
-		if (use_rel)
+		if (use_rel == true)
 		{
 		    relpos = (relpos - relbpos) * pmr->frac;
 		    WRITE_MSG(MOVE_REL, &relpos);
@@ -797,7 +810,7 @@ static long postProcess(motorRecord * pmr)
 
 	/* Use if encoder or ReadbackLink is in use. */
 	msta.All = pmr->msta;
-	int use_rel = (msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip;
+        bool use_rel = (pmr->rtry != 0 && (msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip);
 	double relpos = pmr->diff / pmr->mres;
 	double relbpos = ((pmr->dval - pmr->bdst) - pmr->drbv) / pmr->mres;
 
@@ -812,7 +825,7 @@ static long postProcess(motorRecord * pmr)
 	WRITE_MSG(SET_VELOCITY, &bvel);
 	if (bacc > 0.0)	/* Don't SET_ACCEL if bvel = vbase. */
 	    WRITE_MSG(SET_ACCEL, &bacc);
-	if (use_rel)
+	if (use_rel == true)
 	{
 	    relpos = (relpos - relbpos) * pmr->frac;
 	    WRITE_MSG(MOVE_REL, &relpos);
@@ -985,10 +998,11 @@ LOGIC:
 	Call process_motor_info().
 	IF motor-in-motion indicator (MOVN) is true.
 	    IF new target position in opposite direction of current motion.
-	       [Sign of RDIF is NOT the same as sign of CDIR], AND,
-	       [Dist. to target {DIFF} > 2 x (|Backlash Dist.| + Retry Deadband)], AND,
-	       [MIP indicates this move is either (a result of a retry),OR,
-	    		(not from a Jog* or Hom*)]
+               [New target monitoring is enabled], AND,
+	       [Sign of the commanded difference is NOT the same as sign of CDIR], AND,
+	       [|commanded difference| > 2 x (|Backlash Dist.| + Retry Deadband)], AND,
+	       [MIP indicates this move is either (a result of a retry), OR, (a
+                normal move; not a Jog or Home)]
 		Send Stop Motor command.
 		Set STOP indicator in MIP true.
 		Mark MIP as changed.
@@ -1108,14 +1122,15 @@ static long process(dbCommon *arg)
 
 	if (pmr->movn)
 	{
-	    int sign_rdif = (pmr->rdif < 0) ? 0 : 1;
+            double cdiff = (pmr->rval - pmr->rmp) * fabs(pmr->mres); /* Commanded difference. */
+	    int sign_cdiff = (cdiff < 0.0) ? 0 : 1;
 
 	    /* Test for new target position in opposite direction of current
 	       motion.
 	     */	    
 	    if (pmr->ntm == menuYesNoYES &&
-		(sign_rdif != pmr->cdir) &&
-		(fabs(pmr->diff) > 2 * (fabs(pmr->bdst) + pmr->rdbd)) &&
+		(sign_cdiff != pmr->cdir) &&
+		(fabs(cdiff) > 2 * (fabs(pmr->bdst) + pmr->rdbd)) &&
 		(pmr->mip == MIP_RETRY || pmr->mip == MIP_MOVE))
 	    {
 
@@ -1126,6 +1141,7 @@ static long process(dbCommon *arg)
 		SEND_MSG();
 		pmr->mip |= MIP_STOP;
 		MARK(M_MIP);
+                pmr->pp = FALSE; /* Don't post process the previous move. */
 	    }
 	    status = 0;
 	}
@@ -1693,7 +1709,7 @@ static RTN_STATUS do_work(motorRecord * pmr, CALLBACK_VALUE proc_ind)
 	/** If we're in CLOSED_LOOP mode, get value from input link. **/
 	long status;
 
-	status = dbGetLink(&(pmr->dol), DBR_DOUBLE, &(pmr->val), NULL, NULL);
+	status = dbGetLink(&(pmr->dol), DBR_DOUBLE, &(pmr->val), 0, 0);
 	if (!RTN_SUCCESS(status))
 	{
 	    pmr->udf = TRUE;
@@ -1723,8 +1739,18 @@ static RTN_STATUS do_work(motorRecord * pmr, CALLBACK_VALUE proc_ind)
 	    else if ((pmr->homf && (pmr->dval > pmr->dhlm - pmr->velo)) ||
 		     (pmr->homr && (pmr->dval < pmr->dllm + pmr->velo)))
 	    {
-		pmr->lvio = 1;
+		pmr->lvio = 1;  /* Set limit violation ON. */
 		MARK(M_LVIO);
+                if (pmr->homf)
+                {
+                    pmr->homf = 0; /* Clear Home Forward request. */
+                    MARK_AUX(M_HOMF);
+                }
+                if (pmr->homr)
+                {
+                    pmr->homr = 0; /* Clear Home Reverse request. */
+                    MARK_AUX(M_HOMR);
+                }
 		return(OK);
 	    }
 	    pmr->mip = pmr->homf ? MIP_HOMF : MIP_HOMR;
@@ -1804,6 +1830,7 @@ static RTN_STATUS do_work(motorRecord * pmr, CALLBACK_VALUE proc_ind)
 	    {
 		double jogv = (pmr->jvel * dir) / pmr->mres;
 		double jacc = pmr->jar / fabs(pmr->mres);
+                double vbase = pmr->vbas / fabs(pmr->mres);
 
 		pmr->dmov = FALSE;
 		MARK(M_DMOV);
@@ -1822,6 +1849,7 @@ static RTN_STATUS do_work(motorRecord * pmr, CALLBACK_VALUE proc_ind)
 		    pmr->cdir = !pmr->cdir;
 
 		INIT_MSG();
+		WRITE_MSG(SET_VEL_BASE, &vbase);
 		WRITE_MSG(SET_ACCEL, &jacc);
 		WRITE_MSG(JOG, &jogv);
 		SEND_MSG();
@@ -1977,13 +2005,13 @@ static RTN_STATUS do_work(motorRecord * pmr, CALLBACK_VALUE proc_ind)
 	    bool use_rel, preferred_dir;
 	    double relpos = pmr->diff / pmr->mres;
 	    double relbpos = ((pmr->dval - pmr->bdst) - pmr->drbv) / pmr->mres;
-            long rdbdpos = NINT(pmr->rdbd / pmr->mres); /* retry deadband steps */
+	    long rdbdpos = NINT(pmr->rdbd / fabs(pmr->mres)); /* retry deadband steps */
 	    long rpos, npos;
 	    msta_field msta;
 	    msta.All = pmr->msta;
 
 	    /*** Use if encoder or ReadbackLink is in use. ***/
-	    if ((msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip)
+            if (pmr->rtry != 0 && (msta.Bits.EA_PRESENT && pmr->ueip) || pmr->urip)
 		use_rel = true;
 	    else
 		use_rel = false;
@@ -2352,15 +2380,28 @@ static long special(DBADDR *paddr, int after)
 	offset = pmr->off;
 	if (dir_positive)
 	{
-	    command = SET_HIGH_LIMIT;
 	    tmp_limit = pmr->hlm - offset;
 	    MARK(M_DHLM);
 	}
 	else
 	{
-	    command = SET_LOW_LIMIT;
 	    tmp_limit = -(pmr->hlm) + offset;
 	    MARK(M_DLLM);
+	}
+
+	/* Which controller limit we set depends not only on dir, but
+	   also on the sign of MRES */
+	/* Direction +ve AND +ve MRES OR
+	   Direction -ve AND -ve MRES */
+	if (dir_positive ^ (pmr->mres < 0))
+	{
+	    command = SET_HIGH_LIMIT;
+	}
+	else
+	/* Direction -ve AND +ve MRES OR
+	   Direction +ve AND -ve MRES */
+	{
+	    command = SET_LOW_LIMIT;
 	}
 
 	tmp_raw = tmp_limit / pmr->mres;
@@ -2393,15 +2434,28 @@ static long special(DBADDR *paddr, int after)
 	offset = pmr->off;
 	if (dir_positive)
 	{
-	    command = SET_LOW_LIMIT;
 	    tmp_limit = pmr->llm - offset;
 	    MARK(M_DLLM);
 	}
 	else
 	{
-	    command = SET_HIGH_LIMIT;
 	    tmp_limit = -(pmr->llm) + offset;
 	    MARK(M_DHLM);
+	}
+
+	/* Which controller limit we set depends not only on dir, but
+	   also on the sign of MRES */
+	/* Direction +ve AND +ve MRES OR
+	   Direction -ve AND -ve MRES */
+	if (dir_positive ^ (pmr->mres < 0))
+	{
+	    command = SET_LOW_LIMIT;
+	}
+	else
+	/* Direction -ve AND +ve MRES OR
+	   Direction +ve AND -ve MRES */
+	{
+	    command = SET_HIGH_LIMIT;
 	}
 
 	tmp_raw = tmp_limit / pmr->mres;
@@ -2732,8 +2786,15 @@ static long get_units(const DBADDR *paddr, char *units)
     case motorRecordVMAX:
     case motorRecordBVEL:
     case motorRecordVBAS:
+    case motorRecordJVEL:
+    case motorRecordHVEL:
 	strncpy(s, pmr->egu, DB_UNITS_SIZE);
 	strcat(s, "/sec");
+	break;
+
+    case motorRecordJAR:
+	strncpy(s, pmr->egu, DB_UNITS_SIZE);
+	strcat(s, "/s/s");
 	break;
 
     case motorRecordACCL:
@@ -2925,21 +2986,22 @@ static long get_alarm_double(const DBADDR  *paddr, struct dbr_alDouble * pad)
 static void alarm_sub(motorRecord * pmr)
 {
     msta_field msta;
+    int status;
 
     if (pmr->udf == TRUE)
     {
-	recGblSetSevr((dbCommon *) pmr, UDF_ALARM, INVALID_ALARM);
+	status = recGblSetSevr((dbCommon *) pmr, UDF_ALARM, INVALID_ALARM);
 	return;
     }
     /* limit-switch and soft-limit violations */
     if (pmr->hlsv && (pmr->hls || (pmr->dval > pmr->dhlm)))
     {
-	recGblSetSevr((dbCommon *) pmr, HIGH_ALARM, pmr->hlsv);
+	status = recGblSetSevr((dbCommon *) pmr, HIGH_ALARM, pmr->hlsv);
 	return;
     }
     if (pmr->hlsv && (pmr->lls || (pmr->dval < pmr->dllm)))
     {
-	recGblSetSevr((dbCommon *) pmr, LOW_ALARM, pmr->hlsv);
+	status = recGblSetSevr((dbCommon *) pmr, LOW_ALARM, pmr->hlsv);
 	return;
     }
     
@@ -2950,7 +3012,7 @@ static void alarm_sub(motorRecord * pmr)
 	msta.Bits.CNTRL_COMM_ERR =  0;
 	pmr->msta = msta.All;
 	MARK(M_MSTA);
-	recGblSetSevr((dbCommon *) pmr, COMM_ALARM, INVALID_ALARM);
+	status = recGblSetSevr((dbCommon *) pmr, COMM_ALARM, INVALID_ALARM);
     }
     return;
 }
@@ -3245,7 +3307,7 @@ static void
 	long rtnstat;
 
 	old_drbv = pmr->drbv;
-	rtnstat = dbGetLink(&(pmr->rdbl), DBR_DOUBLE, &(pmr->drbv), NULL, NULL);
+	rtnstat = dbGetLink(&(pmr->rdbl), DBR_DOUBLE, &(pmr->drbv), 0, 0 );
 	if (!RTN_SUCCESS(rtnstat))
 	    pmr->drbv = old_drbv;
 	else

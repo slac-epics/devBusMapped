@@ -11,9 +11,9 @@
  * Notwithstanding the above, explicit permission is granted for APS to 
  * redistribute this software.
  *
- * Version: 1.14
+ * Version: 1.21
  * Modified by: peterd
- * Last Modified: 2006/09/06 12:27:47
+ * Last Modified: 2007/09/20 10:34:47
  *
  * Original Author: Peter Denison
  * Current Author: Peter Denison
@@ -30,6 +30,7 @@
 #include <recSup.h>
 #include <devSup.h>
 #include <alarm.h>
+#include <epicsEvent.h>
 #include <cantProceed.h> /* !! for callocMustSucceed() */
 
 #include <asynDriver.h>
@@ -94,6 +95,7 @@ typedef struct
     asynMotorStatus *pasynMotorStatus;
     void *asynMotorStatusPvt;
     void *registrarPvt;
+    epicsEventId initEvent;
 } motorAsynPvt;
 
 
@@ -106,6 +108,35 @@ static long init( int after )
     return 0;
 }
 
+static void init_controller(struct motorRecord *pmr )
+{
+    /* This routine is copied out of the old motordevCom and initialises the controller
+       based on the record values. I think most of it should be transferred to init_record
+       which is one reason why I have separated it into another routine */
+    motorAsynPvt *pPvt = (motorAsynPvt *)pmr->dpvt;
+    double position = pPvt->status.position;
+
+    if ((fabs(pmr->dval) > pmr->rdbd && pmr->mres != 0) &&
+        ((position * pmr->mres) < pmr->rdbd))
+    {
+        double setPos = pmr->dval / pmr->mres;
+        epicsEventId initEvent = epicsEventCreate( epicsEventEmpty );
+
+        pPvt->initEvent = initEvent;
+
+        start_trans(pmr);
+        build_trans(LOAD_POS, &setPos, pmr);
+        end_trans(pmr);
+
+        if ( initEvent )
+        {
+            epicsEventMustWait(initEvent);
+            epicsEventDestroy(initEvent);
+            pPvt->initEvent = 0;
+        }
+    }
+}
+
 static long init_record(struct motorRecord * pmr )
 {
     asynUser *pasynUser;
@@ -114,7 +145,6 @@ static long init_record(struct motorRecord * pmr )
     asynStatus status;
     asynInterface *pasynInterface;
     motorAsynPvt *pPvt;
-    double resolution;
 
     /* Allocate motorAsynPvt private structure */
     pPvt = callocMustSucceed(1, sizeof(motorAsynPvt), "devMotorAsyn init_record()");
@@ -201,6 +231,12 @@ static long init_record(struct motorRecord * pmr )
 	       pmr->name, pasynUser->errorMessage);
     }
 
+    /* Once everything is set-up, we can do the initial setting of position.
+       This should be the first thing that pushes onto the Asyn queue.
+       It needs to be done before we get the initial values back from the
+       controller.*/
+    init_controller(pmr);
+
     /* Initiate calls to get the initial motor parameters
        Have to do it the long-winded way, because before iocInit, none of the
        locks or scan queues are initialised, so calls to scanOnce(),
@@ -216,8 +252,13 @@ static long init_record(struct motorRecord * pmr )
 			      resolution);
 */
     pasynUser->reason = motorStatus;
-    pPvt->pasynMotorStatus->read(pPvt->asynMotorStatusPvt, pasynUser,
-				 &pPvt->status);
+    status = pPvt->pasynMotorStatus->read(pPvt->asynMotorStatusPvt, pasynUser,
+					  &pPvt->status);
+    if (status != asynSuccess) {
+	asynPrint(pasynUser, ASYN_TRACE_ERROR,
+		  "%s devMotorAsyn.c::init_record: pasynMotorStatus->read "
+		  "returned %s", pmr->name, pasynUser->errorMessage);
+    }
     pasynManager->freeAsynUser(pasynUser);
     pPvt->needUpdate = 1;
 
@@ -234,6 +275,9 @@ CALLBACK_VALUE update_values(struct motorRecord * pmr)
 
     rc = NOTHING_DONE;
 
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devMotorAsyn::update_values, needUpdate=%d\n",
+        pmr->name, pPvt->needUpdate);
     if ( pPvt->needUpdate ) {
 	pmr->rmp = (epicsInt32)floor(pPvt->status.position + 0.5);
 	pmr->rep = (epicsInt32)floor(pPvt->status.encoder_posn + 0.5);
@@ -432,8 +476,14 @@ static void asynCallback(asynUser *pasynUser)
     switch (pmsg->command) {
     case motorStatus:
 	/* Read the current status of the device */
-	pPvt->pasynMotorStatus->read(pPvt->asynMotorStatusPvt, pasynUser,
-				     &pPvt->status);
+	status = pPvt->pasynMotorStatus->read(pPvt->asynMotorStatusPvt,
+					      pasynUser,
+					      &pPvt->status);
+	if (status != asynSuccess) {
+	    asynPrint(pasynUser, ASYN_TRACE_ERROR,
+		      "devMotorAsyn::asynCallback: %s pasynMotorStatus->read"
+		      "returned %s\n", pmr->name, pasynUser->errorMessage);
+	}
 	break;
 
     case motorMoveAbs:
@@ -443,12 +493,17 @@ static void asynCallback(asynUser *pasynUser)
 	/* Intentional fall-through */
     default:
         if (pmsg->interface == int32Type) {
-            pPvt->pasynInt32->write(pPvt->asynInt32Pvt, pasynUser,
-                                    pmsg->ivalue);
+            status = pPvt->pasynInt32->write(pPvt->asynInt32Pvt, pasynUser,
+					     pmsg->ivalue);
         } else {
-            pPvt->pasynFloat64->write(pPvt->asynFloat64Pvt, pasynUser,
-                                      pmsg->dvalue);
+            status = pPvt->pasynFloat64->write(pPvt->asynFloat64Pvt, pasynUser,
+					       pmsg->dvalue);
         }
+	if (status != asynSuccess) {
+	    asynPrint(pasynUser, ASYN_TRACE_ERROR,
+		      "devMotorAsyn::asynCallback: %s pasyn{Float64,Int32}->"
+		      "write returned %s\n", pmr->name, pasynUser->errorMessage);
+	}
         break;
     }
 
@@ -470,6 +525,8 @@ static void asynCallback(asynUser *pasynUser)
                   "devMotorAsyn::asynCallback: %s error in freeAsynUser, %s\n",
                   pmr->name, pasynUser->errorMessage);
     }
+
+    if ( pPvt->initEvent ) epicsEventSignal(  pPvt->initEvent );
 }
 
 /**
@@ -482,8 +539,8 @@ static void statusCallback(void *drvPvt, asynUser *pasynUser,
     motorRecord *pmr = pPvt->pmr;
 
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-	      "%s devMotorAsyn::statusCallback new value=[p:%f,s:%x] %c%c\n",
-	      pmr->name, value->position, value->status,
+	      "%s devMotorAsyn::statusCallback new value=[p:%f,e:%f,s:%x] %c%c\n",
+	      pmr->name, value->position, value->encoder_posn, value->status,
 	      pPvt->needUpdate?'N':' ', pPvt->moveRequestPending?'P':' ');
 
     if (dbScanLockOK) {

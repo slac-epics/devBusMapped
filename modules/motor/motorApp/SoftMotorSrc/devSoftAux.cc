@@ -2,9 +2,9 @@
 FILENAME...	devSoftAux.cc
 USAGE...	Motor record device level support for Soft channel.
 
-Version:	1.10
+Version:	1.11
 Modified By:	peterd
-Last Modified:	2006/04/11 10:11:24
+Last Modified:	2007/09/19 15:57:41
 */
 
 /*
@@ -79,7 +79,7 @@ STATIC void soft_rinp(struct event_handler_args args)
 
 long soft_init(void *after)
 {
-    long before_after = (long) after;
+    int before_after = (int) after;
     if (before_after == 0)
     {
 	epicsThreadId dbCaTask_tid;
@@ -154,6 +154,7 @@ STATIC EPICSTHREADFUNC soft_motor_task(void *parm)
     struct motorRecord *mr;
     struct motor_node *node;
     chid dinp, rdbl, rinp;
+    epicsEventId wait_forever;
 
     epicsEventWait(soft_motor_sem);	/* Wait for dbLockInitRecords() to execute. */
     SEVCHK(ca_context_create(ca_enable_preemptive_callback),
@@ -196,7 +197,13 @@ STATIC EPICSTHREADFUNC soft_motor_task(void *parm)
     }
 
     ellFree(&soft_motor_list);
-    epicsThreadSuspendSelf();		/* Wait Forever. */
+    /* Wait on a (never signalled) event here, rather than suspending the
+       thread, so as not to show up in the thread list as "SUSPENDED", which
+       is usually a sign of a fault. */
+    wait_forever = epicsEventCreate(epicsEventEmpty);
+    if (wait_forever) {
+	epicsEventMustWait(wait_forever);
+    }
     return(NULL);
 }
 

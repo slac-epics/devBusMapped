@@ -97,7 +97,7 @@ static struct board_stat **Micos_cards;
 static long Micos_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     Debug(5, "Micos_init: entry\n");
     if (after == 0)

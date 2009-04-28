@@ -102,7 +102,7 @@ static const char errmsg[] = {"\n\n!!!ERROR!!! - Oms driver uninitialized.\n"};
 
 static long Pmac_init(void *arg)
 {
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (*(Pmac_access.init_indicator) == NO)
     {

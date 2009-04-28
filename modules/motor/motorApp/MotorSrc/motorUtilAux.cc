@@ -2,9 +2,9 @@
 FILENAME...     motorUtilAux.cc
 USAGE...        Motor Record Utility Support.
 
-Version:        1.3
-Modified By:    rivers
-Last Modified:  2006/04/06 19:38:48
+Version:        1.5
+Modified By:    mooney
+Last Modified:  2007/03/20 18:51:30
 */
 
 /*
@@ -26,6 +26,8 @@ Last Modified:  2006/04/06 19:38:48
 * -----------------
 * .01 03-06-06 rls Fixed wrong call; replaced dbGetNRecordTypes() with
 *                  dbGetNRecords().
+* .02 03-20-07 tmm sprintf() does not include terminating null in num of chars
+*                  converted, so getMotorList was not allocating space for it.
 */
 
 #include <string.h>
@@ -49,7 +51,7 @@ char ** getMotorList()
 {
     DBENTRY dbentry, *pdbentry = &dbentry;
     long    status;
-    char    **paprecords = 0, temp[29];
+    char    **paprecords = 0, temp[PVNAME_STRINGSZ];
     int     num_entries = 0, length = 0, index = 0;
 
     dbInitEntry(pdbbase,pdbentry);
@@ -66,7 +68,7 @@ char ** getMotorList()
         while (!status)
         {
             length = sprintf(temp, "%s", dbGetRecordName(pdbentry));
-            paprecords[index] = (char *) callocMustSucceed(length,
+            paprecords[index] = (char *) callocMustSucceed(length+1,
                                            sizeof(char), "getMotorList(2nd)");
             strcpy(paprecords[index], temp); 
             status = dbNextRecord(pdbentry);

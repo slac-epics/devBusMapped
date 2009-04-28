@@ -4,9 +4,9 @@ USAGE...	Motor record driver level support for ThorLabs
                 Piezo Control Module (Model: MDT695)
 		Compatable with MDT694, MDT693
 
-Version:	1.1
+Version:	1.3
 Modified By:	sullivan
-Last Modified:	2006/09/27 20:32:37
+Last Modified:	2007/11/15 18:47:10
 
 */
 
@@ -55,6 +55,8 @@ Last Modified:	2006/09/27 20:32:37
 
 #define CMD_ID       "I"
 #define CMD_DEV      "D"
+#define RESP_DEV     "d"  /* Response if ECHO is ON */
+#define CMD_ECHO     "E"
 #define CMD_POS       "#R?"
 
 #define MDT695_NUM_CARDS	16
@@ -239,9 +241,11 @@ static int set_status(int card, int signal)
       double datad;
 
       /* Convert position and check for error */
+      Debug(5, "set_status(): RecvStr = %s\n", &startptr[2]);
       datad = strtod(&startptr[2], &endptr);
       if (&startptr[2] != endptr)
 	{
+          Debug(5, "set_status(): motorData = %.2f\n", datad);
 	  motorData = NINT(datad / cntrl->drive_resolution);
 	  recvRetry = false;
 	}
@@ -252,6 +256,11 @@ static int set_status(int card, int signal)
     cntrl->status = NORMAL;
   else
     {
+      /* Try turning Echo OFF before next retry */
+      recvCnt = recv_mess(card, startptr, 0);   /* Flush recv buffer */
+      send_mess(card, CMD_ECHO, NULL);
+      recvCnt = recv_mess(card, startptr, 0); 
+
       if (cntrl->status == NORMAL)
 	{
 	  epicsThreadSleep(MOTION_DELAY);
@@ -564,6 +573,13 @@ static int motor_init()
 	      /* Check for valid response -- if not retry */
 	      if ((recvCnt > 0) && strstr(buff, "MDT"))
 		cardFound = true;
+	      else
+		{
+		/* Try turning Echo OFF */
+	        recvCnt = recv_mess(card_index, buff, 0);   /* Flush recv buffer */
+		send_mess(card_index, CMD_ECHO, NULL);
+		recvCnt = recv_mess(card_index, buff, 0); 
+		}
 	    } while(!cardFound  && ++retryCnt < 3);
 	}
 
@@ -609,7 +625,7 @@ static int motor_init()
 		motor_info->no_motion_count = 0;
 		motor_info->encoder_position = 0;
 		motor_info->position = 0;
-
+		motor_info->motor_motion = NULL;
 
 		/* NO Encoder support - internal closed loop controller */
 	        motor_info->encoder_present = NO;

@@ -2,9 +2,9 @@
 FILENAME...	devPC6K.cc
 USAGE...	Motor record device level support for Parker Compumotor drivers
 
-Version:	1.2
+Version:	1.3
 Modified By:	sullivan
-Last Modified:	2006/08/31 15:42:30
+Last Modified:	2007/01/16 17:15:31
 */
 
 /*
@@ -109,7 +109,7 @@ static struct board_stat **PC6K_cards;
 STATIC long PC6K_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {
@@ -278,7 +278,7 @@ STATIC RTN_STATUS PC6K_build_trans(motor_cmnd command, double *parms, struct mot
 	    motor_call->type = PC6K_table[command];
 
 	    // sprintf(buff, "%dAA%.*f", axis, maxdigits, cntrl_units/2);
-	    sprintf(buff, "%dAA%d", axis, intval/2);
+	    sprintf(buff, "%dAA%ld", axis, NINT(dval/2.0));
 	    strcat(motor_call->message, buff);
 	    rtnval = motor_end_trans_com(mr, drvtabptr);
 	    rtnval = (RTN_STATUS) motor_start_trans_com(mr, PC6K_cards);
@@ -292,7 +292,7 @@ STATIC RTN_STATUS PC6K_build_trans(motor_cmnd command, double *parms, struct mot
 	    motor_call->type = PC6K_table[command];
 
 	    // sprintf(buff, "%dADA%.*f", axis, maxdigits, cntrl_units/2);
-	    sprintf(buff, "%dADA%d", axis, intval/2);
+	    sprintf(buff, "%dADA%ld", axis, NINT(dval/2.0));
 	    break;
 	
 	case GO:

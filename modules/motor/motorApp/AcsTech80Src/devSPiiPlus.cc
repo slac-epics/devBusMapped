@@ -109,7 +109,7 @@ static struct board_stat **SPiiPlus_cards;
 STATIC long SPiiPlus_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {

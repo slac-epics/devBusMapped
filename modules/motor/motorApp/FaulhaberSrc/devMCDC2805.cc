@@ -109,7 +109,7 @@ static struct board_stat **MCDC2805_cards;
 STATIC long MCDC2805_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {

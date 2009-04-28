@@ -2,9 +2,9 @@
 FILENAME...	drvOms58.cc
 USAGE...	Motor record driver level support for OMS model VME58.
 
-Version:	1.19
+Version:	1.20
 Modified By:	sluiter
-Last Modified:	2006/06/16 16:27:45
+Last Modified:	2007/08/16 18:48:12
 */
 
 /*
@@ -42,6 +42,7 @@ Last Modified:	2006/06/16 16:27:45
  *	- VME58 ver 2.24-4E
  *	- VME58 ver 2.35-8
  *      - VME58 ver 2.41-8
+ *      - VME58 ver 2.42-8
  *
  * Modification Log:
  * -----------------
@@ -89,6 +90,12 @@ Last Modified:	2006/06/16 16:27:45
  *			`tree_list' not supported..." compiler error message.
  * .30  03-23-05 rls - Make OSI.
  * .31  05-02-05 rls - Bug fix for stale data delay; set delay = 10ms.
+ * .32  08-16-07 rls - "stale data" problem was caused by communicating via the
+ *                     ASCII commands while the DPRAM was updating.
+ *                   - set "stale data delay" to zero.
+ *                   - remove "Work around for intermittent wrong LS status" for
+ *                     version 2.35 firmware.
+ *                   - modify start_status() to wait for update before exiting.
  */
 
 #include	<string.h>
@@ -201,7 +208,7 @@ struct
 
 extern "C" {epicsExportAddress(drvet, drvOms58);}
 
-static struct thread_args targs = {SCAN_RATE, &oms58_access, 0.010};
+static struct thread_args targs = {SCAN_RATE, &oms58_access, 0.000};
 
 /*----------------functions-----------------*/
 
@@ -220,8 +227,8 @@ static long report(int level)
 	    if (brdptr == NULL)
 		printf("    Oms Vme58 motor card #%d not found.\n", card);
 	    else
-		printf("    Oms Vme58 motor card #%d @ 0x%lX, id: %s \n", card,
-		       (unsigned long) brdptr->localaddr,
+		printf("    Oms Vme58 motor card #%d @ 0x%X, id: %s \n", card,
+		       (epicsUInt32) brdptr->localaddr,
 		       brdptr->ident);
 	}
     }
@@ -242,12 +249,6 @@ static void query_done(int card, int axis, struct mess_node *nodeptr)
 
     send_mess(card, DONE_QUERY, oms58_axis[axis]);
     recv_mess(card, buffer, 1);
-
-#if (CPU == PPC604 || CPU == PPC603)    
-    if (strcmp(motor_state[card]->ident, "VME58 ver 2.35-8") == 0)
-	epicsThreadSleep(quantum * 2.0); /* Work around for intermittent wrong LS status. */
-#endif
-
     if (nodeptr->status.Bits.RA_PROBLEM)
 	send_mess(card, AXIS_STOP, oms58_axis[axis]);
 }
@@ -281,6 +282,15 @@ static void start_status(int card)
 
 	    cntrlReg.Bits.update = 1;
 	    pmotor->control.cntrlReg = cntrlReg.All;
+           
+	    /* Wait Forever for controller to update. */
+	    cntrlReg.All = pmotor->control.cntrlReg;
+	    while(cntrlReg.Bits.update != 0)
+            {
+                Debug(1, "start_status: DPRAM delay.\n");
+                epicsThreadSleep(quantum);
+		cntrlReg.All = pmotor->control.cntrlReg;
+            }
 	}
     }
     else
@@ -301,6 +311,15 @@ static void start_status(int card)
     
 		cntrlReg.Bits.update = 1;
 		pmotor->control.cntrlReg = cntrlReg.All;
+
+                /* Wait Forever for controller to update. */
+                cntrlReg.All = pmotor->control.cntrlReg;
+                while(cntrlReg.Bits.update != 0)
+                {
+                    Debug(1, "start_status: DPRAM delay.\n");
+                    epicsThreadSleep(quantum);
+                    cntrlReg.All = pmotor->control.cntrlReg;
+                }
 	    }
 	}
     }
@@ -834,7 +853,7 @@ int oms58Setup(int num_cards,	/* maximum number of cards in rack */
 	oms58_num_cards = num_cards;
 
     /* Check range and boundary(4K) on base address */
-    if (addrs > (void *) 0xF000 || ((unsigned long) addrs & 0xFFF))
+    if (addrs > (void *) 0xF000 || ((epicsUInt32) addrs & 0xFFF))
     {
 	Debug(1, "omsSetup: invalid base address 0x%X\n", (epicsUInt32) addrs);
 	oms_addrs = (char *) OMS_NUM_ADDRS;

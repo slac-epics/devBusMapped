@@ -14,6 +14,7 @@ SRCS += ImsRegister.cc
 SRCS += devIM483SM.cc drvIM483SM.cc
 SRCS += devIM483PL.cc drvIM483PL.cc
 SRCS += devMDrive.cc  drvMDrive.cc
+SRCS += devMDrivePlus.cc  drvMDrivePlus.cc
 
 Ims_LIBS += motor asyn
 Ims_LIBS += $(EPICS_BASE_IOC_LIBS)

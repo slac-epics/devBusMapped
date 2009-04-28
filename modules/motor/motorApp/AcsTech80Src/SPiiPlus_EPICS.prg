@@ -1,25 +1,28 @@
-#/ Controller version  = 4.50
-#/ Date = 04/26/2006 16:41
-#/ User remarks = hello
-#0
-!Note: Each motor needs all the programs in BUFFER 0 copied into its corresponding buffer. 
-!Note: ie: motor 1 - buffer #0 , motor 2 - buffer #1 ..... etc. 
+#/ Controller version  = 5.00
+#/ Date = 08/08/2006 17:03
+#/ User remarks = #0
+! X-AXIS
+! Ibex dual rotary stage, 4xHR2 Nanomotiion motors per axis, AB5 amplifier, firmware 3.2
+! Renishaw encoders, 20 micron pitch, X2000 interpolator, 1 count = 10 nm, 15 counts = 1 micro-radian
+! ACS-Tech80 SpiPlus PCI-4 controller, firmware 5.0
+!Note: Set dcEnable flag in AUTOEXEC routine to select AB2 or AB5 amplifier
 !Note: VEL and ACC are commented out for the AC mode as they are set from EPICS MEDM screens.
 !Note: VEL and ACC are DEFINED for the DC mode as they are not defined from EPICS MEDM screens
 !ACC is defined in the homing routines as they are defined from EPICS during Homing but VEL is defined.
 
-GLOBAL acpar(4)
-GLOBAL dcpar(4)
-GLOBAL INT home_F(4)
-GLOBAL INT home_R(4)
-GLOBAL target_pos(4)
-GLOBAL jog_vel(4)
-GLOBAL Done(4)
-GLOBAL opReq(4)
+GLOBAL acpar(8)
+GLOBAL dcpar(8)
+GLOBAL dcEnable(8)
+GLOBAL INT home_F(8)
+GLOBAL INT home_R(8)
+GLOBAL target_pos(8)
+GLOBAL jog_vel(8)
+GLOBAL Done(8)
+GLOBAL opReq(8)
 
 ! Each AXIS has a copy of these functions in a corresponding buffer 
 LOCAL Axis
-Axis = 0
+LOCAL Buffer
 
 IF     opReq(Axis) = 1
     call ABS_MOVE
@@ -37,6 +40,30 @@ opReq(Axis) = 0; Done(Axis) = 1
 
 STOP
 
+!Powerup Routine
+AUTOEXEC:
+
+!Buffer = sysinfo(3)
+Buffer = 0
+Axis = Buffer
+
+! Set AC/DC Switching Amplifier (AB2) enable flag 
+! Enable = 1, Disable = 0
+dcEnable(Axis) = 0
+
+DISP "Buffer 0: Axis:", Axis
+
+! Set all axis configuration parmeters
+call AXIS_CFG
+acpar(Axis)=1; TILL acpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+else
+    acpar(Axis)=1; TILL acpar(Axis)=0
+end
+
+STOP
+
 !THESE PROGRAMS ARE SMALL ROUTINES THAT ARE REQUIRED FOR CO-ORDINATING MOVEMENT WITH EPICS. THIS IS ESPECIALLY NEEDED
 !BECAUSE OF THE AC AND DC MODE SWITCHING NEEDED for AB2 amplifier BEFORE AND AFTER EVERY MOVE.
 !Written by Joe Sullivan (BCDA) and Suresh (8-ID) (March 2006)
@@ -47,14 +74,18 @@ acpar(Axis)=1; TILL acpar(Axis)=0
 PTP(Axis),target_pos(Axis)
 TILL ^MST(Axis).#MOVE
 ! Switch to DC(Position) Mode
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 RET
 
 REL_MOVE:
 acpar(Axis)=1; TILL acpar(Axis)=0
 PTP/r(Axis),target_pos(Axis)
 TILL ^MST(Axis).#MOVE
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 RET
 
 
@@ -62,7 +93,9 @@ JOG_MOVE:
 acpar(Axis)=1; TILL acpar(Axis)=0
 JOG/v(Axis),jog_vel(Axis)
 TILL ^MST(Axis).#MOVE
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 RET
 
 
@@ -79,11 +112,6 @@ HOME_R:
 ! Load tuned parameters for AC mode for AB2 Amplifier
 !disable this when using AB5 amplifier
 acpar(Axis)=1; TILL acpar(Axis)=0
-!VEL(Axis) = 102400*2 !2 mm/sec  !defined from EPICS
-ACC(Axis) = VEL(Axis)*10
-DEC(Axis) = ACC(Axis)
-KDEC(Axis) = DEC(Axis)*2
-JERK(Axis) = ACC(Axis)*20
 
 DISP "Homing in negative direction is in PROGRESS ......"
 ENABLE (Axis)
@@ -108,8 +136,11 @@ FDEF(Axis).#SRL = 1  !re-enable default response of Software Right Limit fault
 FDEF(Axis).#SLL = 1  !re-enable default response of Software Left Limit fault
 
 !Put the stage in DC Mode
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 !DISABLE (Axis)
+call AXIS_CFG
 DISP "Homing is DONE ......"
 home_R(Axis) = 0;
 RET
@@ -119,12 +150,6 @@ HOME_F:
 ! Load tuned parameters for AC mode for AB2 Amplifier
 !disable this when using AB5 amplifier
 acpar(Axis)=1; TILL acpar(Axis)=0
-
-!VEL(Axis) = 102400*2 !2 mm/sec !defined from EPICS
-ACC(Axis) = VEL(Axis)*10 
-DEC(Axis) = ACC(Axis)*0.5
-KDEC(Axis) = DEC(Axis)
-JERK(Axis) = ACC(Axis)*10
 
 DISP "Homing in positive direction is in PROGRESS ......"
 ENABLE (Axis)
@@ -149,8 +174,11 @@ FDEF(Axis).#SRL = 1  !re-enable default response of Software Right Limit fault
 FDEF(Axis).#SLL = 1  !re-enable default response of Software Left Limit fault
 
 !Put the stage in DC Mode
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 !DISABLE (Axis)
+call AXIS_CFG
 DISP "Homing is DONE ......"
 home_F(Axis) = 0;
 RET
@@ -173,73 +201,117 @@ RET
 
 !To switch from DC to AC you must disable the motor
 AC_TUNED_PAR: ! FOR LONG MOVE
-  !!!!     BLOCK       !All commands between BLOCK and END will be executed in one controller cycle (1 msec)
-DISABLE(Axis);
-SLCPRD(Axis)=1E9; !Set this parameter for Nanomotion with High res. on sin/cos encoder to over come a bug in ACS related to Commutating motors
+! Switching only neccessary if DC mode enabled
+if dcEnable(Axis) > 0
+  DISABLE(Axis);
+  !SET DC_MODE to 0 and SET Nanomotion bit to 1 resp.
+  MFLAGS(Axis).30 = 0;
+  MFLAGS(Axis).7 = 1;
+  SLPKP(Axis)=300;
+  SLVKP(Axis)=20;
+  SLVKI(Axis)= 1600;
+  SLFRC(Axis)=17;
+end
+
 !VEL(Axis)= 102400 * 1.0; !defined from EPICS
 !ACC(Axis)=VEL(Axis)*10;  !defined from EPICS
-!SET DC_MODE to 0 and SET Nanomotion bit to 1 resp.
-MFLAGS(Axis).30 = 0;
-MFLAGS(Axis).7 = 1;
-XVEL(Axis)=2.048E7;
-SLPKP(Axis)=300;
-SLVKP(Axis)=20;
-SLVKI(Axis)= 1600;
-SLFRC(Axis)=17;
-SLDZMIN(Axis)=2;
-SLDZMAX(Axis)=10;
-TARGRAD(Axis) = SLDZMAX(Axis);
-SETTLE(Axis) = 10;
-DEC(Axis)=ACC(Axis)*0.5;
-KDEC(Axis)=DEC(Axis);
-JERK(Axis)=ACC(Axis)*10;
-  !!!!     END         !All commands between BLOCK and END will be executed in one controller cycle (1 msec)
-ENABLE(Axis);
+DEC(Axis)=ACC(Axis);
+KDEC(Axis)=DEC(Axis)*1E4;
+JERK(Axis)=ACC(Axis)*1E3;
+
+if dcEnable(Axis) > 0
+  ENABLE(Axis);
+end
 acpar(Axis)=0;
 RET
 
 
 DC_TUNED_PAR:
 !SET DC_MODE to 1 and SET Nanomotion bit to 0 resp.
-   !!!!     BLOCK        !All commands between BLOCK and END will be executed in one controller cycle (1 msec)
 VEL(Axis)=15;
 ACC(Axis)=VEL(Axis)*10;
 MFLAGS(Axis).30 = 1;
 MFLAGS(Axis).7 =0;
-XVEL(Axis)=2.048E7;
 SLPKP(Axis)=2500;
 SLVKP(Axis)=20;
 SLVKI(Axis)= 9000;
 SLFRC(Axis)=0;
-SETTLE(Axis) = 10;
 DEC(Axis)=ACC(Axis);
 KDEC(Axis)=DEC(Axis);
 JERK(Axis)=ACC(Axis)*10;
-!SLDZMIN(Axis)=2;SLDZMAX(Axis)=10;TARGRAD(Axis) = SLDZMAX(Axis);
-  !!!!       END        !All commands between BLOCK and END will be executed in one controller cycle (1 msec)
 dcpar(Axis)=0;
 RET
 
+! *********************
+! Axis Configuration
+! *********************
+AXIS_CFG:
+DISABLE (Axis)
+! Configuration Parameters
+MFLAGS(Axis).#OPEN = 0
+DCOM(Axis)= 0 
+MFLAGS(Axis).12=0 ! Encoder Direction, 0 = direct, 1 = invereted
+MFLAGS(Axis).13=0 ! Driver Output, 0 = direct, 1 = inverted
+SLCPRD(Axis) = 1E9  
+! Safety Parameters
+XVEL(Axis) = 2E8  ! Maximum Velocity
+XCURV(Axis) = 75  ! Maximum motor command during motion, 100% = 10V
+XCURI(Axis) = 75  ! Maximum motor command during rest, 100% = 10V
+XRMS(Axis) = 50   ! Maximum RMS of motor command. Do not exceed 75%
+XRMST(Axis)= 3230 ! RMS time constant
+CERRI(Axis) = 1E4 ! Critical position error at rest
+CERRV(Axis) = 1E5 ! Critical position error at CV
+CERRA(Axis) = 1E5 ! Critical position error at Accel
+FMASK(Axis).#CPE = 1! Enable critical position error protection
+FMASK(Axis).#CL = 1 ! Enable current limit protection
+!LEFT_LIM = 3E6 
+!RIGHT_LIM = -3E6
+! Nanomotion Parameters
+MFLAGS(Axis).7 = 0! Disable Enable Nanomotion mode, since we are using an AB5 amplifier
+SETTLE(Axis)=5    ! Require motor to be within TARGRAD consecutively for 5 msec before declaring end of move.
+TARGRAD(Axis)= 10 ! Target radius = 50 nm
+SLDZMAX(Axis)= 0  ! Dead Zone Maximum 
+SLDZMIN(Axis)= 0  ! Dead Zone Minimum
+SLZFF(Axis) = 0   ! Zero feed forward at 0 counts before target
+SLFRC(Axis) = 0   ! friction offset compensation
+SLFRCD(Axis) = 0  ! Dynamic friction offset compensation
+SLIOFFS(Axis) = 0 ! DAC offset
+SLVSOFD(Axis) = 0.707 ! Low pass filter damping
+! Default Motion Parameters
+VEL(Axis)= 1E4    ! Velocity
+ACC(Axis)= 1E5    ! Accel
+DEC(Axis)= 1E5    ! Decel
+KDEC(Axis)= 1E9   ! Kill decel 
+JERK(Axis)= 1E8 !  
+! Servo Parameters, relaexed
+SLPKP(Axis)=40   ! KP (POSITION GAIN)
+SLVKP(Axis)=2000   ! KV (VELOCITY GAIN)
+SLVKI(Axis)=500  ! KI (INTEGRATOR GAIN)
+SLVLI(Axis)=50    ! Anti windup integrator limit, % of 100%
+SLVSOF(Axis)=1000  ! Low pass filter bandwidth
+SLAFF(Axis) = 0   ! Accel feed forward
+MFLAGS(Axis).14 = 0! Enable notch filter
+RET
 
-ON home_R(0)=1; Axis = 0; CALL HOME_R; RET
-ON home_F(0)=1; Axis = 0; CALL HOME_F; RET
-ON acpar(0)=1;Axis=0;CALL AC_TUNED_PAR; RET
-ON dcpar(0)=1;Axis=0;CALL DC_TUNED_PAR; RET
+ON home_R(Axis)=1; CALL HOME_R; RET
+ON home_F(Axis)=1; CALL HOME_F; RET
+ON acpar(Axis)=1;  CALL AC_TUNED_PAR; RET
+ON dcpar(Axis)=1;  CALL DC_TUNED_PAR; RET
 
 
 
-
-
-#4
+#8
 !THIS BUFFER STOPS MOTION PROGRAMS ON A PER AXIS BASES AND RETURNS TO DC MODE
 !Done(Axis) Flag is used by EPICS to check when op operation is complete
 !Written by Joe Sullivan (BCDA) and Suresh (8-ID) (March 2006)
 
-GLOBAL stop_all(4)
-GLOBAL Done(4)
-GLOBAL acpar(4)
-GLOBAL dcpar(4)
-LOCAL INT Axis
+GLOBAL stop_all(8)
+GLOBAL Done(8)
+GLOBAL acpar(8)
+GLOBAL dcpar(8)
+GLOBAL dcEnable(8)
+LOCAL Axis
+
 STOP
 
 STOP_MOVE:
@@ -255,10 +327,12 @@ TILL ^MST(Axis).#MOVE
 TILL ^PST(Axis).#RUN & ^PST(Axis).#AUTO,500
 
 !clear the AC and DC Flags to make sure they are cleared
-acpar(0)=0;dcpar(0)=0;
+acpar(Axis)=0;dcpar(Axis)=0;
 
 ! Switch to DC Mode
-dcpar(Axis)=1; TILL dcpar(Axis)=0
+if dcEnable(Axis) > 0
+    dcpar(Axis)=1; TILL dcpar(Axis)=0
+end
 
 ! Clear flags
 stop_all(Axis) = 0; Done(Axis) = 1;
@@ -266,6 +340,16 @@ stop_all(Axis) = 0; Done(Axis) = 1;
 RET
 
 ON stop_all(0)=1; Axis=0;CALL STOP_MOVE; RET
+ON stop_all(1)=1; Axis=1;CALL STOP_MOVE; RET
+ON stop_all(2)=1; Axis=2;CALL STOP_MOVE; RET
+ON stop_all(3)=1; Axis=3;CALL STOP_MOVE; RET
+ON stop_all(4)=1; Axis=4;CALL STOP_MOVE; RET
+ON stop_all(5)=1; Axis=5;CALL STOP_MOVE; RET
+ON stop_all(6)=1; Axis=6;CALL STOP_MOVE; RET
+ON stop_all(7)=1; Axis=7;CALL STOP_MOVE; RET
+
+
+
 
 
 

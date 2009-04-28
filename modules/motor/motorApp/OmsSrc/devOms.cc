@@ -87,7 +87,7 @@ static const char errmsg[] = {"\n\n!!!ERROR!!! - Oms driver uninitialized.\n"};
 
 static long oms_init(void *arg)
 {
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (*(oms_access.init_indicator) == NO)
     {

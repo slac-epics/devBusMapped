@@ -67,7 +67,7 @@ static const char errmsg[] = {"\n\n!!!ERROR!!! - Oms MAXv driver uninitialized.\
 
 static long MAXv_init(void *arg)
 {
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (*(MAXv_access.init_indicator) == NO)
     {

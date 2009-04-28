@@ -110,7 +110,7 @@ static struct board_stat **MDT695_cards;
 STATIC long MDT695_init(void *arg)
 {
     long rtnval;
-    long after = (long) arg;
+    int after = (int) arg;
 
     if (after == 0)
     {

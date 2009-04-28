@@ -1,13 +1,13 @@
-Motor Record R6-0 Release Notice
+Motor Record R6-3 Release Notice
 ===============================================================================
 
 The motor record software in this release is compatible with EPICS base
-R3.14.8.2.
+R3-14-9.
 
 
 Contents
 ========
-	
+        
 This <supporttop> contains the following motor record related items:
         - motor record and device driver database definitions.
         - the record level support library.
@@ -44,7 +44,7 @@ Configuration
 The following files can be edited to tailor this distribution to site specific
 needs.  See individual files for instructions.
         - <motor>/configure/RELEASE: Define location of external products.
-        
+
                 If only VMEbus based motor controllers (e.g., OMS, Highland
                 V544) and/or Soft Channel device support is used, then only
                 EPICS_BASE is required.
@@ -53,7 +53,7 @@ needs.  See individual files for instructions.
                 the following support modules are required;
                         - EPICS base R3-14-7
                         - ASYN R4-2
-                
+
                 If any example applications (motorExApp) are to be built, then
                         TEMPLATE_TOP and MSITOP must be defined.
 
@@ -64,7 +64,7 @@ needs.  See individual files for instructions.
                 #DIRS := $(DIRS) $(filter-out $(DIRS), iocBoot)
         - ./motorExApp/Makefile: Define which, if any, example applications are
                 to be built.
-                
+
 
 
 Known Problems
@@ -113,15 +113,206 @@ Known Problems
         entered in the VAL or DVAL field.
 
 
+Modification Log from R6-2 to R6-3
+==================================
+
+1)  <motor>/motorApp/NewportSrc was not building for the solaris-sparc-gnu
+        target.  Three changes were made to test the above change for the
+        solaris-sparc (SUNWspro) target and to make the motor record
+        distribution solaris-sparc (SUNWspro) compatible.
+        
+        Files modified: - "XPSGatheringMain_SYS_LIBS_solaris += socket nsl"
+                          added to motorApp/NewportSrc/Makefile.
+                        - "motorSimSupport_LIBS += motor" added to
+                          motorApp/MotorSimSrc/Makefile.
+                        - modified "Debug" statement arguments in
+                          motorApp/NewFocusSrc/drvPMNC87xx.cc
+                        - "oms_LIBS += asyn" added to motorApp/OmsSrc/Makefile.
+
+2) Mark Rivers found and fixed a bug in the motor record; RDBD was being used
+        in motordevCom.cc's motor_init_record_com() before the RDBD validation
+        check in motorRecord.cc's init_record().  This resulted in motor
+        positions not being initialized from save/restore at boot-up if RDBD
+        was not included in a save/restore save set.
+
+        File modified: the enforceMinRetryDeadband() call in init_record() was
+                       moved to before the call to device support init_record.
+
+3) Added Shifu Xu's support for Animatics Corporation SmartMotor.
+
+        Directory added: motorApp/SmartMotorSrc
+
+4) A bug was introduced into the shell command "motorUtilInit()" affecting
+        these versions of the motor distribution; R6-2, R6-2-1 and R6-2-2. This
+        bug resulted in the erroneous error message; "motorUtilInit: Prefix
+        %c: has more than 53 characters. Exiting".
+
+        File modified: motorApp/MotorSrc/motorUtil.cc
+
+5) The "alldone" PV in motorUtil.db defaulted to the "moving" state between
+        "iocInit" and "motorUtilInit", giving the false indication that motors
+        were moving during boot-up.  The "alldone" PV now defaults to the
+        "done" state.
+
+        File modified: motorApp/Db/motorUtil.db
+
+6)  Added Jens Eden's (BESSY) modifications to the OMS MAXv driver.
+        - register iocsh commands.
+        - added USE_DEVLIB with RTEMS conditional.
+        - replaced errlogPrintf calls in ISR with epicsInterruptContextMessage
+          calls.
+
+        File modified: motorApp/OmsSrc/drvMAXv.cc
+
+7) OMS MAXv driver clean-up; made send_mess() and recv_mess() non-global and
+        removed unneeded stub start_status().
+
+        File modified: motorApp/OmsSrc/drvMAXv.cc
+
+8) The OMS VME58 "stale data" problem referred to in item #4 under R5-7 was
+        caused by communicating via the ASCII commands while the DPRAM was
+        updating.  With this release the OMS VME58 driver's "stale data delay"
+        is set to zero.  In addition, a "Work around for intermittent wrong LS
+        status" that occurred only with version 2.35 firmware is removed.
+        Finally, start_status() is modified to wait for DPRAM update before
+        exiting.
+        
+        File modified: motorApp/OmsSrc/drvOms58.cc
+
+9) Raised the precedence of INIT string in motor_init_record_com() for
+        controllers (PI C-848) that require an INIT string primitive before a
+        LOAD_POS can be executed.
+        
+        File modified: motorApp/MotorSrc/motordevCom.cc
+
+10) Numerous fixes for the PI C-848 controller.
+
+        Files modified: motorApp/PiSrc/[drvPIC848.h,devPIC848.cc,drvPIC848.cc]
+
+11) Two changes were made to the motor record to better support DC motors.
+
+        First, with this release, if retries are disabled (RTRY=0), then all
+        moves are done in absolute mode.  This allows a DC motor user to have
+        the readback values calculated based on either the local encoder (UEIP)
+        or the readback link (URIP), but still have all moves commanded in
+        absolute mode.  Previous releases the of the motor record would use
+        relative moves if either the local or external readbacks were enabled,
+        regardless of the state (enable/disable) of the retries.
+        
+        Second, the New Target Monitoring (NTM field) logic is changed to use
+        reference rather than feedback positions. This eliminates unwanted motor
+        record STOP commands at the end of DC motor moves.
+
+        File modified: motorApp/MotorSrc/motorRecord.cc
+
+12) Motor record bug fix for long moves at backlash velocity after a new target
+        position detected (tdir change).
+
+        File modified: motorApp/MotorSrc/motorRecord.cc
+
+13) Ron Sluiter added support for the Kohzu SC-800 stepper motor controller.
+
+        Directory added: motorApp/KohzuSrc
+
+14) Joe Sullivan added support for the piezosystem jena GmbH EDS controller.
+
+        Directory added: motorApp/PiJenaSrc
+
+15) The examples iocNoMPF and iocWithMPF were renamed iocNoAsyn and
+        iocWithAsyn, respectively.  
+
+        Directories renamed in <motor>/motorExApp and <motor>/iocBoot.
+
+
+Modification Log from R6-1 to R6-2
+==================================
+
+1) Bug fix for Newport PM500 initialization problem.  The PM500 driver was not
+        issuing the correct command when it queried for the number of axes at
+        boot up; correct command (XSTAT?), incorrect command (STAT?).  This
+        resulted in a "PM500 system error" message on the 1st axis.
+
+        File modified: NewportSrc/drvPM500.cc
+
+2) A bug was introduced with R6-0.  The OMS device support was overwriting PID
+        parameter fields during normalization calculation.
+
+        File modified: OmsSrc/devOmsCom.cc
+
+3) Bug fix in motor_init_record_com() for logic that determines precedence
+        between controller or save/restore motor position at boot-up.  Negative
+        controller positions were not handled correctly.
+
+        File modified: MotorSrc/motordevCom.cc; take absolute value of position
+                       from controller.
+
+4) Added Pete Jemian's motorxU.adl and modifications to the motor.db template
+        that provides the user with the ability to adjust the motor tweak (TWV)
+        and slew velocity (VELO/S) values by a factor of either 0.1 or 10.
+
+        File added: motorApp/op/adl/motorxU.adl
+        Files modified: - motorApp/Db/motor.db; scalcout records $(P)$(M)_vCh
+                                                      and $(P)$(M)_twCh added.
+                        - motorApp/op/adl/topMotors[4/8].adl; added motorxU.adl
+                          to menu selection.
+
+5) Clear home request when soft-limit violation occurs.
+
+        File modified: do_work() in motorRecord.cc
+
+
+6) Joe Sullivan added support for Thorlabs Piezo Control Module, model MDT695.
+
+        Directory added: motorApp/ThorLabsSrc
+
+7) Due to releasing R6-1 during Newport development, R6-1 can result in linker
+        errors on the symbol "xpsgathering".  Newport users should upgrade to
+        R6-2.
+
+
+Modification Log from R6-0 to R6-1
+==================================
+
+1) MicroMo model MVP 2001 B02 driver; bug fix for recv_mess() always returning
+        nread = 0.
+
+        File modified: MicroMoSrc/drvMVP2001.cc
+
+2) New Focus models 8750 and 8752; check for special STA cmnd handling.
+        SocketClose() at exit added but disabled pending further testing.
+
+        File modified: NewFocusSrc/drvPMNC87xx.cc
+
+3) Physik Instrumente (PI) GmbH & Co. C-862; added 17ms "status update delay"
+        to prevent dropped communication characters in controller; i.e.
+        erroneous command error responses.
+
+        File modified: PiSrc/drvPIC862.cc
+
+4) All motorStatus[xx].adl displays modified to show motor position with text
+        rather than with bar graphs.
+
+        Files modified: motorApp/op/adl/motorStatus[xx].adl
+
+5) Joe Sullivan added support for the Physik Instrumente (PI) GmbH & Co. model
+        E-710 motor controller.
+
+        Files added to motorApp/PiSrc: devPIE710.cc, drvPIE710.cc, drvPIE710.h
+
+6) Parker 6K Series; closeSocket() call at EXIT code added (requires asd8 BSP).
+
+        File modified: drvPC6K.cc
+
+
 Modification Log from R5-9 to R6-0
 ==================================
 
 1) The OMS MAXv polling rate, which set is from the MAXvSetup() st.cmd command,
         is allowed to be as high as the OS clock rate; i.e.,
-	(1/epicsThreadSleepQuantum()).
-	
+        (1/epicsThreadSleepQuantum()).
+
         File modified: drvMAXv.cc - changed polling rate error check to,
-	               1 <= polling rate <=  (1/epicsThreadSleepQuantum())
+                       1 <= polling rate <=  (1/epicsThreadSleepQuantum())
 
 2) Since R4-5 (item #9), RDBD must be >= MRES.  The test for this condition
         was done using floating point values.  This caused an occasional
@@ -137,16 +328,16 @@ Modification Log from R5-9 to R6-0
         manipulate the velocity values are unaware of this restriction and
         create a torrent of these messages.  With this release the OMS device
         will only output this warning message once.
-        
+
         File modified: Added message latch to oms_build_trans() in devOmsCom.cc
 
 4) Added a work around for OMS PC68/78 firmware error.  PC68/78 controllers
         make an erroneous response after they are queried with the "?KP"
-	command at boot-up.  This resulted in 1st axis having same position (RP
-	command) as last the axis.
+        command at boot-up.  This resulted in 1st axis having same position (RP
+        command) as last the axis.
 
-	File modified: Added a dummy comm. transaction to motor_init() in
-	               drvOmsPC68.cc.
+        File modified: Added a dummy comm. transaction to motor_init() in
+                       drvOmsPC68.cc.
 
 5) GPIB under ASYN allows only one input EOS character; no output EOS is
         allowed. Adjustments were made to the Newport ESP300 driver to
@@ -260,13 +451,13 @@ Modification Log from R5-8 to R5-9
                         - <motor>/motorApp/Db/XPS_trajectoryScan.db
 
 10) Brian Tieman and Ron Sluiter added support for the standalone, RS-232
-	versions of the OMS PC68 and PC78 model controllers.  The same device
-	(OMS PC68/78) and driver (drvOmsPC68) support both models.
+        versions of the OMS PC68 and PC78 model controllers.  The same device
+        (OMS PC68/78) and driver (drvOmsPC68) support both models.
 
-	Files added	- <motor>/motorApp/OmsSrc/devOmsPC68.cc
-			- <motor>/motorApp/OmsSrc/drvOmsPC68.cc
-			- <motor>/motorApp/OmsSrc/drvOmsPC68.h
-	Files modified	- <motor>/motorApp/OmsSrc/devOms.dd
+        Files added     - <motor>/motorApp/OmsSrc/devOmsPC68.cc
+                        - <motor>/motorApp/OmsSrc/drvOmsPC68.cc
+                        - <motor>/motorApp/OmsSrc/drvOmsPC68.h
+        Files modified  - <motor>/motorApp/OmsSrc/devOms.dd
 
 
 Modification Log from R5-7 to R5-8
@@ -434,7 +625,7 @@ Modification Log from R5-6 to R5-7
         condition correctly.  This resulted in the motor record not setting
         either of the limit error indicator fields (HLS/LLS) and becoming stuck
         in the "Moving" state.
-        
+
         File modified: do_work() in motorRecord.cc; complement CDIR when
                         jogging if DIR="Neg".
 
@@ -1089,7 +1280,7 @@ Modification Log from R4-4 to R4-5
         in terms of motor steps.
         - RES always equal to MRES.  RES preserved for backward compatibility
                 only.  All instances of RES have been replaced with MRES.
-        
+
         Files modified: - MotorSrc/motor.h
                         - MotorSrc/motorRecord.c
                         - MotorSrc/motordevCom.c
@@ -1157,7 +1348,7 @@ Modification Log from R4-4 to R4-5
                          - MotorSrc/motorRecord.c
                          - MotorSrc/motordrvCom.c
                          - All drivers; i.e., */drv*.c
-                
+
 17) Post all fields when recGblResetAlarms() returns an alarm.
 
 
@@ -1229,7 +1420,7 @@ Modification Log from R4-3 to R4-4
         code generated.
         Files modified: motorRecord.c   - mmap_field and nmap_field unions.
                         drvOms58.h      - all control/status registers.
-        
+
 
                                         
 Modification Log from R4-2 to R4-3
@@ -1620,7 +1811,7 @@ Modification Log from V3-5 to R4-0
         finite state machine was strictly enforced on jog request, jogging,
         stopping a jog and the backlash after jogging.  Jog processing is
         isolated from the JOG[F/R] fields.  Specifically,
-        
+
         - Added two new state indicators to MIP; MIP_JOG_REQ and MIP_JOG_STOP.
                 The jog states now consist of the following; Start (mip=0),
                 Request, Jogging, Stopping and Backlash.
@@ -1690,7 +1881,7 @@ Modification Log from V3-5 to R4-0
         maximum (i.e., VMAX/SMAX) value entered is always valid.  For example,
         if the minimum is entered and it exceeds the maximum, then the maximum
         is set to the new minimum value.
-        
+
         Files modified: motorRecord.dbd, motorRecord.c
 
 21) With MM4000 device support, a tweak request (TWF/TWR) occurring during the
@@ -1743,7 +1934,7 @@ Modification Log from V3-5 to R4-0
         processing the number of significant decimal points correctly when the
         controller used scientific notation for the motor resolution.
         Files modified: motor_init() in drvMM400.c
-        
+
 29) Through an odd set of circumstances the Oms58 driver was not performing
         status updates on PowerPC (PPC) platforms.  All users of the OMS VME58
         controller on a PPC platform must upgrade to Motor Record version 4.0

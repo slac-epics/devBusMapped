@@ -2,9 +2,9 @@
 FILENAME...     motorUtil.cc
 USAGE...        Motor Record Utility Support.
 
-Version:        1.1
-Modified By:    sluiter
-Last Modified:  2006/02/23 19:51:50
+Version:        1.4
+Modified By:    peterd
+Last Modified:  2007/09/19 15:57:41
 */
 
 
@@ -19,11 +19,19 @@ Last Modified:  2006/02/23 19:51:50
 *  Argonne National Laboratory
 *
 *  Current Author: Ron Sluiter
+*
+* Modification Log:
+* -----------------
+* .01 05-10-07 rls - Bug fix for motorUtilInit()'s PVNAME_SZ error check using
+*                    an uninitialized variable.
+*                  - Added redundant initialization error check. 
+*
 */
 
 #include <stdio.h>
 #include <string.h>
 #include <cadef.h>
+#include <dbDefs.h>
 #include <epicsString.h>
 #include <epicsRingPointer.h>
 #include <cantProceed.h>
@@ -54,7 +62,7 @@ static void moving(int, chid, short);
 
 typedef struct motor_pv_info
 {
-    char name[29];      /* pv names limited to 28 chars + term. in dbDefs.h */
+    char name[PVNAME_SZ];      /* pv names limited to 28 chars + term. in dbDefs.h */
     chid chid_dmov;     /* Channel id for <motor name>.DMOV */
     chid chid_stop;     /* Channel id for <motor name>.STOP */
     int in_motion;
@@ -80,7 +88,22 @@ static chid chid_allstop, chid_moving, chid_alldone;
 RTN_STATUS motorUtilInit(char *vme_name)
 {
     RTN_STATUS status = OK;
+    static bool initialized = false;	/* motorUtil initialized indicator. */
     
+    if (initialized == true)
+    {
+        printf( "motorUtil already initialized. Exiting\n");
+        return ERROR;
+    }
+
+    if (strlen(vme_name) > PVNAME_SZ - 7 )
+    {
+        printf( "motorUtilInit: Prefix %s has more than %d characters. Exiting\n",
+                vme_name, PVNAME_SZ - 7 );
+        return ERROR;
+    }
+
+    initialized = true;
     vme = epicsStrDup(vme_name);
 
     epicsThreadCreate((char *) "motorUtil", epicsThreadPriorityMedium,
@@ -92,8 +115,9 @@ RTN_STATUS motorUtilInit(char *vme_name)
 
 static int motorUtil_task(void *arg)
 {
-    char temp[34];
+    char temp[PVNAME_STRINGSZ+5];
     int itera, status;
+    epicsEventId wait_forever;
 
     SEVCHK(ca_context_create(ca_enable_preemptive_callback),
            "motorUtil: ca_context_create() error");
@@ -117,6 +141,13 @@ static int motorUtil_task(void *arg)
         strcat(temp, "alldone.VAL");
         chid_alldone = getChID(temp);
 
+	if (!chid_moving || !chid_alldone) {
+	    errlogPrintf("Failed to connect to %smoving or %salldone.\n"
+			 "Check prefix matches Db\n", vme, vme);
+	    ca_task_exit();
+	    return ERROR;
+	}
+
         /* loop over motors in motorlist and fill in motorArray */
         for (itera=0; itera < numMotors; itera++)
         {
@@ -139,10 +170,20 @@ static int motorUtil_task(void *arg)
         strcpy(temp, vme);
         strcat(temp, "allstop.VAL");
         chid_allstop = getChID(temp);
-        status = pvMonitor(0, chid_allstop, -1);
+	if (!chid_allstop) {
+	    errlogPrintf("Failed to connect to %sallstop\n",vme);
+	} else {
+	    status = pvMonitor(0, chid_allstop, -1);
+	}
     }
     
-    epicsThreadSuspendSelf(); /* Wait Forever */
+    /* Wait on a (never signalled) event here, rather than suspending the
+       thread, so as not to show up in the thread list as "SUSPENDED", which
+       is usually a sign of a fault. */
+    wait_forever = epicsEventCreate(epicsEventEmpty);
+    if (wait_forever) {
+	epicsEventMustWait(wait_forever);
+    }
     return(ERROR);
 }
 
@@ -152,15 +193,21 @@ static chid getChID(char *PVname)
     chid channelID = 0;
     int status;
 
+    if (motorUtil_debug)
+	errlogPrintf("getChID(%s)\n", PVname);
+
     /* In R3.14 ca_create_channel() will replace ca_search_and_connect() */
     status = ca_search_and_connect(PVname, &channelID, 0, 0);
-    status = ca_pend_io(TIMEOUT);
+    if (status == ECA_NORMAL) 
+    {
+	status = ca_pend_io(TIMEOUT);
+    }
 
     if (status != ECA_NORMAL)
     {
         SEVCHK(status, "ca_search_and_connect");
-        ca_task_exit(); /* this is serious */
-        errlogPrintf("(motorUtil_A.c) getChID error: %i\n", status);
+        errlogPrintf("motorUtil.cc: getChID(%s) error: %i\n", PVname, status);
+	channelID = 0;
     }
     return channelID;
 }
@@ -201,8 +248,8 @@ static void stopAll(chid callback_chid, char *callback_value)
     short val = 1, release_val = 0;
     
     if (callback_chid != chid_allstop)
-        errlogPrintf("callback_chid = %08lx, chid_allstop = %08lx\n",
-               (unsigned long) callback_chid, (unsigned long) chid_allstop);
+        errlogPrintf("callback_chid = %08x, chid_allstop = %08x\n",
+               (unsigned int) callback_chid, (unsigned int) chid_allstop);
     
     if (strcmp(callback_value, "release") != 0)
     {
@@ -323,17 +370,17 @@ void printChIDlist()
 
     for (itera=0; itera < numMotors; itera++)
     {
-        errlogPrintf("i = %i,\tname = %s\tchid_dmov = %08lx\tchid_stop = \
-               %08lx\tin_motion = %i\tindex = %i\n", itera,
+        errlogPrintf("i = %i,\tname = %s\tchid_dmov = %08x\tchid_stop = \
+               %08x\tin_motion = %i\tindex = %i\n", itera,
                motorArray[itera].name,
-               (unsigned long) motorArray[itera].chid_dmov,
-               (unsigned long) motorArray[itera].chid_stop, 
+               (unsigned int) motorArray[itera].chid_dmov,
+               (unsigned int) motorArray[itera].chid_stop, 
                motorArray[itera].in_motion, motorArray[itera].index);
     }
     
-    errlogPrintf("chid_allstop = %08lx\n", (unsigned long) chid_allstop);
-    errlogPrintf("chid_alldone = %08lx\n", (unsigned long) chid_alldone);
-    errlogPrintf("chid_moving = %08lx\n", (unsigned long) chid_moving);
+    errlogPrintf("chid_allstop = %08x\n", (unsigned int) chid_allstop);
+    errlogPrintf("chid_alldone = %08x\n", (unsigned int) chid_alldone);
+    errlogPrintf("chid_moving = %08x\n", (unsigned int) chid_moving);
 }
 
 
@@ -355,6 +402,7 @@ static void motorUtilRegister(void)
 }
 
 epicsExportRegistrar(motorUtilRegister);
+epicsExportAddress(int, motorUtil_debug);
 
 } // extern "C"
 

@@ -92,9 +92,9 @@ STATIC const char errmsg[] = {"\n\n!!!ERROR!!! - OmsPC68 driver uninitialized.\n
 
 STATIC long oms_init(void *arg)
 {
-    long after = (long)arg;
+int after = (int) arg;
 
-    if (*(OmsPC68_access.init_indicator) == NO)
+	if (*(OmsPC68_access.init_indicator) == NO)
     {
 		errlogSevPrintf(errlogMinor, "%s", errmsg);
 		return(ERROR);
