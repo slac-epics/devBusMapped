@@ -1,8 +1,28 @@
+#==============================================================
+#
+#  Name: RELEASE_NOTES
+#
+#  Rem: This files describes release notes for
+#       devBusMapped support.
+#
+#  Auth: dd-mmm-yyyy, Till Strauman      (STRAUMAN)
+#  Rev:  dd-mmm-yyyy, Reviewer's Name    (USERNAME)
+#--------------------------------------------------------------
+#  Mod:
+#        29-Apr-2009, K. Luchini         (LUCHINI):
+#           release devBusMapped-R2-0-0
+#
+#==============================================================
+#
+devBusMapped-R1-0-2:
+Build against EPICS R3.14.8.2 and RTEMS 4.9.1 (base-R3-14-8-3-lcls3)
+
 devBusMapped-R1-0-2-1:
-	modifications needed to bring the module to EPICS R3-14-9 standard
+modifications needed to bring the module to EPICS R3-14-9 standard
 
 devBusMapped-R1-0-2:
 Build against EPICS R3.14.9 and RTEMS 4.7.1 (base-R3-14-9-lcls1)
 
 devBusMapped-R1-0-1:
 Build against EPICS R3.14.8.2 and RTEMS 4.7.1 (base-R3-14-8-2-lcls2)
+
