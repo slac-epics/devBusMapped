@@ -14,7 +14,7 @@
 #
 #==============================================================
 #
-devBusMapped-R1-0-2:
+devBusMapped-R2-0-0:
 Build against EPICS R3.14.8.2 and RTEMS 4.9.1 (base-R3-14-8-3-lcls3)
 
 devBusMapped-R1-0-2-1:
