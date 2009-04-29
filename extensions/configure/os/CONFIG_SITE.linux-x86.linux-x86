@@ -11,18 +11,24 @@
 
 -include $(TOP)/configure/os/CONFIG_SITE.Common.Common
 
-X11_LIB=/usr/X11R6/lib
-X11_INC=/usr/X11R6/include/X11
-MOTIF_LIB=/usr/X11R6/lib
-MOTIF_INC=/usr/X11R6/include
+ifeq ($(shell if [ -d /usr/X11R6/lib ]; then echo 1; fi),1)
+X11_MAIN_DIR=/usr/X11R6
+else
+X11_MAIN_DIR=/usr
+endif
+
+X11_LIB=$(X11_MAIN_DIR)/lib
+X11_INC=$(X11_MAIN_DIR)/include/X11
+MOTIF_LIB=$(X11_MAIN_DIR)/lib
+MOTIF_INC=$(X11_MAIN_DIR)/include
 # needed by EDM (ungif and png)
 GIF_LIB=/usr/lib
 GIF_INC=/usr/include
 PNG_LIB=/usr/lib
 PNG_INC=/usr/include
 # added XPM for StripTool
-XPM_LIB = /usr/X11R6/lib
-XPM_INC = /usr/X11R6/include
+XPM_LIB = $(X11_MAIN_DIR)/lib
+XPM_INC = $(X11_MAIN_DIR)/include
 
 #OPENWIN =
 #WINGZ =
@@ -33,7 +39,7 @@ XPM_INC = /usr/X11R6/include
 #TK_TCL = /usr/lib
 #IDL =
 
-CMLOG = /pcds/package/cmlog
+CMLOG = /reg/g/pcds/package/cmlog
 CMLOG_INC = $(CMLOG)/include
 CMLOG_LIB = $(CMLOG)/lib/Linux-i386
 CMLOG_BIN = $(CMLOG)/bin/Linux-i386
