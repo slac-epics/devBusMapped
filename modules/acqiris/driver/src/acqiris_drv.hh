@@ -9,6 +9,7 @@
 #include <epicsEvent.h>
 #include <epicsThread.h>
 
+extern "C" {
 struct acqiris_data_t {
   unsigned nsamples;
   void* buffer;
@@ -35,6 +36,7 @@ typedef struct acqiris_driver_t ad_t;
 extern acqiris_driver_t acqiris_drivers[];
 extern unsigned nbr_acqiris_drivers;
 extern epicsMutexId acqiris_dma_mutex;
+} // extern "C"
 
 #define SUCCESS(x) (((x)&0x80000000) == 0)
 
