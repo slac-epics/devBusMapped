@@ -15,7 +15,7 @@
 #include "asynOctetSyncIO.h"
 #include "epicsExport.h"
 
-#define MDrivePlus_NUM_CARDS    8
+#define MDrivePlus_NUM_CARDS    32
 #define MAX_AXES        8
 #define BUFF_SIZE 13        /* Maximum length of string to/from MDrivePlus */
 
