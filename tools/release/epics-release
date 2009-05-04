@@ -410,7 +410,7 @@ try:
 			print "Syntax: %s <package1>=<version> [ <package2>=<version> ... ] \\" % (sys.argv[0])
 			print "\t[ --rev <svnrev> ] [ --branch <branch> ] [ --repo <svnrepo> ] \\"
 			print "\t[ --release <release_area> ] [ --patch ] \\"
-			print "\t[ --debug ] [ --keeptmp ] \\"
+			print "\t[ --debug ] [ --keeptmp ] [ --update ] \\"
 			print "\t| --help"
 			print "<packageX>: name of the package to release."
 			print "<version>: name/version under which the package should be released."
@@ -474,16 +474,28 @@ try:
 	# Setup a lock to make sure 2 release scripts are not running in //
 	print "Acquiring lock for release area %s ..." % (dictConfig["prefix"]),
 	sys.stdout.flush()
+        lockf = dictConfig["prefix"] + "/lock"
 	try:
-		dictConfig["lock"] = os.open(dictConfig["prefix"] + "/lock", os.O_CREAT | os.O_EXCL)
+		dictConfig["lock"] = os.open(lockf, os.O_CREAT | os.O_EXCL)
 		print "done."
 	except:
-		if os.path.exists(dictConfig["prefix"] + "/lock"):
-			print "failed\nERROR: someone else has the lock, try again later."
+                print "failed"
+                if os.path.exists(lockf):
+                        import stat
+                        import pwd
+                        lf_own_uid = os.stat(lockf)[stat.ST_UID]
+                        my_uid = os.getuid()
+                        if lf_own_uid != my_uid:
+                                print "ERROR: Lock is currently owned by another user.  Contact '%s' about lock." % \
+                                      (pwd.getpwuid(lf_own_uid)[0],)
+                        else:
+                                print "ERROR: You already own the release lock."
+                                print "-> Are you releasing in a different session?"
+                                print "-> If not, manually remove lock by deleting '%s'." % \
+                                      (lockf,)
 		else:
 			print "failed\nERROR: could not acquire the lock, check permissions."
-			if dictConfig["debug"]:
-				print "open: %s." % (sys.exc_value)
+                        print "Open status: %s." % (sys.exc_value)
 		script_exit(5)	
 	# Install each package
 	for (strPackage, strVersion) in lstPackages:
