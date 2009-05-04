@@ -16,16 +16,16 @@ if ( ! ${?EPICS_SITE_CONFIG} ) then
 	exit 1
 endif
 
-set TMP_EPICS_SITE_TOP `dirname ${EPICS_SITE_CONFIG}`
+set TMP_EPICS_SITE_TOP = `dirname ${EPICS_SITE_CONFIG}`
 if ( ! ${?EPICS_TOOLS_SITE_TOP} ) then
 	set EPICS_TOOLS_SITE_TOP = ${TMP_EPICS_SITE_TOP}
 endif
 
 # Now we detect the version of the tools and deduct the path from it
-set TOOLS_MODULE_VERSION `grep -E '^[ ]*TOOLS_MODULE_VERSION[ ]*=' ${EPICS_SITE_CONFIG} | sed -e 's/^[ ]*TOOLS_MODULE_VERSION[ ]*=[ ]*\([^# ]*\)#*.*$/\1/'`
-set EPICS_SITE_TOP `make -f ${EPICS_TOOLS_SITE_TOP}/tools/${TOOLS_MODULE_VERSION}/lib/Makefile.displayvar EPICS_SITE_TOP`
+set TOOLS_MODULE_VERSION = `grep -E '^[ ]*TOOLS_MODULE_VERSION[ ]*=' ${EPICS_SITE_CONFIG} | sed -e 's/^[ ]*TOOLS_MODULE_VERSION[ ]*=[ ]*\([^# ]*\)#*.*$/\1/'`
+set EPICS_SITE_TOP = `make -f ${EPICS_TOOLS_SITE_TOP}/tools/${TOOLS_MODULE_VERSION}/lib/Makefile.displayvar EPICS_SITE_TOP`
 if ( ! ${?EPICS_TOOLS_SITE_TOP} ) then
-	set EPICS_TOOLS_SITE_TOP ${EPICS_SITE_TOP}
+	set EPICS_TOOLS_SITE_TOP = ${EPICS_SITE_TOP}
 endif
 
 if ( ! -d ${EPICS_TOOLS_SITE_TOP} ) then
@@ -33,7 +33,7 @@ if ( ! -d ${EPICS_TOOLS_SITE_TOP} ) then
 	exit 1
 endif
 
-set TOOLS_DIR `make -f ${EPICS_TOOLS_SITE_TOP}/tools/${TOOLS_MODULE_VERSION}/lib/Makefile.displayvar EPICS_TOOLS_SITE_TOP=${EPICS_TOOLS_SITE_TOP} TOOLS`
+set TOOLS_DIR = `make -f ${EPICS_TOOLS_SITE_TOP}/tools/${TOOLS_MODULE_VERSION}/lib/Makefile.displayvar EPICS_TOOLS_SITE_TOP=${EPICS_TOOLS_SITE_TOP} TOOLS`
 
 if ( ! -d ${TOOLS_DIR} ) then
 	echo "PCDS tools directory ${TOOLS_DIR} does not exist."
@@ -44,6 +44,14 @@ set EPICS_BASE = `make -f ${TOOLS_DIR}/lib/Makefile.displayvar EPICS_SITE_TOP=${
 set EPICS_EXTENSIONS = `make -f ${TOOLS_DIR}/lib/Makefile.displayvar EPICS_SITE_TOP=${EPICS_TOOLS_SITE_TOP} EPICS_EXTENSIONS`
 
 set EPICS_HOST_ARCH = `${EPICS_BASE}/startup/EpicsHostArch.pl`
+if ( ! -d ${EPICS_BASE}/bin/${EPICS_HOST_ARCH} ) then
+	if ( "X${EPICS_HOST_ARCH}" == "Xlinux-x86_64" ) then
+		# Try behaving as a 32bits system
+		set EPICS_HOST_ARCH = "linux-x86"
+	else
+		echo "WARNING: could not find binaries built for platform ${EPICS_HOST_ARCH}."
+	endif
+endif
 
 # Set path to utilities provided by EPICS and its extensions
 setenv PATH "${PATH}:${EPICS_BASE}/bin/${EPICS_HOST_ARCH}:${TOOLS_DIR}/bin"

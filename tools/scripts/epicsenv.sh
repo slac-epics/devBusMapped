@@ -45,6 +45,14 @@ EPICS_BASE=$(make -f ${TOOLS_DIR}/lib/Makefile.displayvar EPICS_SITE_TOP=${EPICS
 EPICS_EXTENSIONS=$(make -f ${TOOLS_DIR}/lib/Makefile.displayvar EPICS_SITE_TOP=${EPICS_TOOLS_SITE_TOP} EPICS_EXTENSIONS)
 
 EPICS_HOST_ARCH=$(${EPICS_BASE}/startup/EpicsHostArch.pl)
+if [ ! -d ${EPICS_BASE}/bin/${EPICS_HOST_ARCH} ]; then
+	if [ "X${EPICS_HOST_ARCH}" == "Xlinux-x86_64" ]; then
+		# Try behaving as a 32bits system
+		EPICS_HOST_ARCH="linux-x86"
+	else
+		echo "WARNING: could not find binaries built for platform ${EPICS_HOST_ARCH}."
+	fi
+fi
 
 # Set path to utilities provided by EPICS and its extensions
 PATH="${PATH}:${EPICS_BASE}/bin/${EPICS_HOST_ARCH}:${TOOLS_DIR}/bin"
