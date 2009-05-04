@@ -9,6 +9,7 @@ DIRS += calcPv
 DIRS += locPv
 DIRS += baselib 
 DIRS += edmMain 
+DIRS += pvlib 
 DIRS += giflib 
 DIRS += pnglib 
 DIRS += pvFactory 
