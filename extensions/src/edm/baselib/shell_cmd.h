@@ -221,7 +221,6 @@ typedef struct bufTag {
   int bufOneShot;
   int bufSwapButtons;
   int bufIncludeHelpIcon;
-  int bufExecCursor;
 } bufType, *bufPtr;
 
 // static char * const nullHost = "";
@@ -260,7 +259,7 @@ int opComplete;
 double threadSecondsToDelay, autoExecInterval;
 XtIntervalId timer;
 int oneShot, timerActive, timerValue, multipleInstancesAllowed,
- swapButtons, includeHelpIcon, execCursor;
+ swapButtons, includeHelpIcon;
 THREAD_HANDLE thread;
 
 int pwFormX, pwFormY, pwFormW, pwFormH, pwFormMaxH;

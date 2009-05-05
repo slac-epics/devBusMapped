@@ -1267,7 +1267,7 @@ static void file_cb (
 
 XmPushButtonCallbackStruct *cb;
 long num;
-Widget p, prevP, curP;
+Widget p, curP;
 
   num = (long) client;
   cb = (XmPushButtonCallbackStruct *) call;
@@ -1275,15 +1275,13 @@ Widget p, prevP, curP;
   if ( num == 0 ) {   // close window
 
     /* find topmost widget */
-    prevP = curP = p = w;
+    curP = p = w;
     do {
-      if ( XtParent(p) ) prevP = p;
       p = XtParent(p);
       if ( p ) curP = p;
     } while ( p );
 
-    //XtUnmapWidget( curP );
-    XtUnmapWidget( prevP );
+    XtUnmapWidget( curP );
 
   }
   else if ( num == 1 ) {
@@ -3055,14 +3053,9 @@ term:
   // create window
 
   //shell = XtVaAppCreateShell( colorInfoClass_str2, colorInfoClass_str2,
-  //shell = XtVaAppCreateShell( "edm", "edm",
-  // topLevelShellWidgetClass,
-  // XtDisplay(top),
-  // XtNmappedWhenManaged, False,
-  // NULL );
-
-  shell = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-   top,
+  shell = XtVaAppCreateShell( "edm", "edm",
+   topLevelShellWidgetClass,
+   XtDisplay(top),
    XtNmappedWhenManaged, False,
    NULL );
 
@@ -4914,14 +4907,9 @@ term:
   // create window
 
   //shell = XtVaAppCreateShell( colorInfoClass_str2, colorInfoClass_str2,
-  //shell = XtVaAppCreateShell( "edm", "edm",
-  // topLevelShellWidgetClass,
-  // XtDisplay(top),
-  // XtNmappedWhenManaged, False,
-  // NULL );
-
-  shell = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-   top,
+  shell = XtVaAppCreateShell( "edm", "edm",
+   topLevelShellWidgetClass,
+   XtDisplay(top),
    XtNmappedWhenManaged, False,
    NULL );
 
@@ -5705,14 +5693,9 @@ firstTry:
   // create window
 
   //shell = XtVaAppCreateShell( colorInfoClass_str2, colorInfoClass_str2,
-  //shell = XtVaAppCreateShell( "edm", "edm",
-  // topLevelShellWidgetClass,
-  // XtDisplay(top),
-  // XtNmappedWhenManaged, False,
-  // NULL );
-
-  shell = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-   top,
+  shell = XtVaAppCreateShell( "edm", "edm",
+   topLevelShellWidgetClass,
+   XtDisplay(top),
    XtNmappedWhenManaged, False,
    NULL );
 

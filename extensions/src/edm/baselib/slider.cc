@@ -45,8 +45,7 @@ double dvalue;
   }
 
   if ( slo->controlExists ) {
-    slo->controlPvId->put(
-     XDisplayName(slo->actWin->appCtx->displayName), dvalue );
+    slo->controlPvId->put( dvalue );
     slo->actWin->appCtx->proc->lock();
     slo->needCtlRefresh = 1;
     slo->actWin->addDefExeNode( slo->aglPtr );
@@ -213,8 +212,7 @@ int stat, xOfs;
   slo->actWin->appCtx->proc->unlock();
 
   if ( slo->controlExists ) {
-    stat = slo->controlPvId->put(
-     XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+    stat = slo->controlPvId->put( fvalue );
     if ( !stat ) fprintf( stderr, activeSliderClass_str1 );
   }
   else if ( slo->anyCallbackFlag ) {
@@ -286,8 +284,7 @@ int stat, xOfs;
   slo->actWin->appCtx->proc->unlock();
 
   if ( slo->controlExists ) {
-    stat = slo->controlPvId->put(
-     XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+    stat = slo->controlPvId->put( fvalue );
     if ( !stat ) fprintf( stderr, activeSliderClass_str2 );
   }
   else if ( slo->anyCallbackFlag ) {
@@ -338,8 +335,7 @@ activeSliderClass *slo = (activeSliderClass *) client;
   slo->actWin->appCtx->proc->unlock();
 
   if ( slo->controlExists ) {
-    stat = slo->controlPvId->put(
-     XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+    stat = slo->controlPvId->put( fvalue );
     if ( !stat ) fprintf( stderr, activeSliderClass_str3 );
     slo->needErase = 1;
     slo->needDraw = 1;
@@ -914,8 +910,7 @@ int stat, xOfs;
   actWin->appCtx->proc->unlock();
 
   if ( controlExists ) {
-    stat = controlPvId->put(
-     XDisplayName(actWin->appCtx->displayName), fvalue );
+    stat = controlPvId->put( fvalue );
     if ( !stat ) fprintf( stderr, activeSliderClass_str2 );
   }
   else if ( anyCallbackFlag ) {
@@ -971,8 +966,7 @@ int stat, xOfs;
   actWin->appCtx->proc->unlock();
 
   if ( controlExists ) {
-    stat = controlPvId->put(
-     XDisplayName(actWin->appCtx->displayName), fvalue );
+    stat = controlPvId->put( fvalue );
     if ( !stat ) fprintf( stderr, activeSliderClass_str1 );
   }
   else if ( anyCallbackFlag ) {
@@ -2496,8 +2490,7 @@ int tX, tY, x0, y0, x1, y1, incX0, incY0, incX1, incY1;
         slo->savedV = slo->controlV;
 
         if ( slo->savedValuePvConnected ) {
-          slo->savedValuePvId->put(
-           XDisplayName(slo->actWin->appCtx->displayName), slo->savedV );
+          slo->savedValuePvId->put( slo->savedV );
 	}
 	else {
           xOfs = ( slo->w - 4 - slo->controlW ) / 2;
@@ -2536,8 +2529,7 @@ int tX, tY, x0, y0, x1, y1, incX0, incY0, incX1, incY1;
         slo->actWin->appCtx->proc->unlock();
 
         if ( slo->controlExists ) {
-          stat = slo->controlPvId->put(
-           XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+          stat = slo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeSliderClass_str56 );
         }
         else if ( slo->anyCallbackFlag ) {
@@ -2801,8 +2793,7 @@ int tX, tY, x0, y0, x1, y1, incX0, incY0, incX1, incY1;
         slo->actWin->appCtx->proc->unlock();
 
         if ( slo->controlExists ) {
-          stat = slo->controlPvId->put(
-           XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+          stat = slo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeSliderClass_str59 );
         }
         else if ( slo->anyCallbackFlag ) {
@@ -2867,8 +2858,7 @@ int tX, tY, x0, y0, x1, y1, incX0, incY0, incX1, incY1;
         slo->actWin->appCtx->proc->unlock();
 
         if ( slo->controlExists ) {
-          stat = slo->controlPvId->put(
-           XDisplayName(slo->actWin->appCtx->displayName), fvalue );
+          stat = slo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeSliderClass_str60 );
         }
         else if ( slo->anyCallbackFlag ) {

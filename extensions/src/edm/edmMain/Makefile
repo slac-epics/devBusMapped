@@ -30,7 +30,7 @@ ifdef EPICS_HOST_ARCH
    PROD_LIBS += ca Com
    
    INSTALL_INCLUDE = $(INSTALL_LOCATION)/include/edm
-   USR_INCLUDES += -I../../util -I../../lib
+   USR_INCLUDES += -I../../util -I../../pvlib -I../../lib
 
    USR_INCLUDES += -I$(MOTIF_INC) -I$(X11_INC)
 
@@ -53,12 +53,6 @@ ifdef EPICS_HOST_ARCH
    HCLXmu_DIR = $(X11_LIB)
    
    edm_SRCS += main.cc
-
-   # Configuration files
-   vpath edmPvObjects $(ALL_SRC_DIRS)
-   vpath edmObjects $(ALL_SRC_DIRS)
-   INSTALL_TEMPLATES = $(INSTALL_LOCATION)/templates/edm
-   TEMPLATES += edmPvObjects edmObjects edmPrintDef fonts.list colors.list
 
    include $(TOP)/configure/RULES
    

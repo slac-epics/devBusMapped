@@ -267,6 +267,8 @@ XmString str;
 
   XtAddCallback( clear_pb, XmNactivateCallback, stc_clear, this );
 
+  autoOpenWindow = 1;
+
   if ( textTag )
     str = XmStringCreate( scrolledTextClass_str3, textTag );
   else
@@ -275,7 +277,7 @@ XmString str;
   if ( textFontList ) {
     autoOpen_tb = XtVaCreateManagedWidget( "autoopentoggle", xmToggleButtonWidgetClass,
      topForm,
-     XmNset, (XtArgVal) autoOpenWindow,
+     XmNset, (XtArgVal) True,
      XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
      XmNtopWidget, dismiss_pb,
      XmNleftAttachment, XmATTACH_FORM,
@@ -286,7 +288,7 @@ XmString str;
   else {
     autoOpen_tb = XtVaCreateManagedWidget( "autoopentoggle", xmToggleButtonWidgetClass,
      topForm,
-     XmNset, (XtArgVal) autoOpenWindow,
+     XmNset, (XtArgVal) True,
      XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
      XmNtopWidget, dismiss_pb,
      XmNleftAttachment, XmATTACH_FORM,
@@ -766,24 +768,8 @@ int scrolledTextClass::autoOpen ( void ) {
 
 }
 
-void scrolledTextClass::setAutoOpen (
-  int flag
-) {
-
-  autoOpenWindow = flag;
-
-}
-
 int scrolledTextClass::autoRaise ( void ) {
 
   return autoRaiseWindow;
-
-}
-
-void scrolledTextClass::setAutoRaise (
-  int flag
-) {
-
-  autoRaiseWindow = flag;
 
 }

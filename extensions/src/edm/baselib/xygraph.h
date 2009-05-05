@@ -47,9 +47,6 @@
 #define XYGC_K_USER_SPECIFIED 1
 #define XYGC_K_AUTOSCALE 2
 
-#define XYGC_K_SMOOTHING 0
-#define XYGC_K_NO_SMOOTHING 1
-
 #define XYGC_K_SYMBOL_TYPE_NONE 0
 #define XYGC_K_SYMBOL_TYPE_CIRCLE 1
 #define XYGC_K_SYMBOL_TYPE_SQUARE 2
@@ -102,7 +99,7 @@
 #define XYGC_K_PLOT_SORTED_X_MODE 1
 
 #define XYGC_MAJOR_VERSION 4
-#define XYGC_MINOR_VERSION 4
+#define XYGC_MINOR_VERSION 3
 #define XYGC_RELEASE 0
 
 #ifdef __xygraph_cc
@@ -289,14 +286,6 @@ static void yValueWithTimeUpdate (
   ProcessVariable *pv,
   void *userarg );
 
-static void traceCtlMonitorConnection (
-  ProcessVariable *pv,
-  void *userarg );
-
-static void traceCtlValueUpdate (
-  ProcessVariable *pv,
-  void *userarg );
-
 static void resetMonitorConnection (
   ProcessVariable *pv,
   void *userarg );
@@ -382,7 +371,6 @@ typedef struct editBufTag {
   int bufLineStyle[XYGC_K_MAX_TRACES];
   char bufTrigPvName[PV_Factory::MAX_PV_NAME+1];
   char bufResetPvName[PV_Factory::MAX_PV_NAME+1];
-  char bufTraceCtlPvName[PV_Factory::MAX_PV_NAME+1];
   int bufOpMode[XYGC_K_MAX_TRACES];
   int bufY2Scale[XYGC_K_MAX_TRACES];
   int bufCount;
@@ -401,8 +389,6 @@ typedef struct editBufTag {
   int bufXMinorGrid;
   efInt bufXAnnotationPrecision;
   int bufXAnnotationFormat;
-  int bufXGridMode;
-  int bufXAxisSmoothing;
 
   int bufY1Axis[NUM_Y_AXES];
   int bufY1AxisStyle[NUM_Y_AXES];
@@ -418,8 +404,6 @@ typedef struct editBufTag {
   int bufY1MinorGrid[NUM_Y_AXES];
   efInt bufY1AnnotationPrecision[NUM_Y_AXES];
   int bufY1AnnotationFormat[NUM_Y_AXES];
-  int bufY1GridMode[NUM_Y_AXES];
-  int bufY1AxisSmoothing[NUM_Y_AXES];
 
   int bufY2Axis;
   int bufY2AxisStyle;
@@ -608,14 +592,6 @@ friend void yValueWithTimeUpdate (
   ProcessVariable *pv,
   void *userarg );
 
-friend void traceCtlMonitorConnection (
-  ProcessVariable *pv,
-  void *userarg );
-
-friend void traceCtlValueUpdate (
-  ProcessVariable *pv,
-  void *userarg );
-
 friend void resetMonitorConnection (
   ProcessVariable *pv,
   void *userarg );
@@ -764,14 +740,12 @@ int arrayHead[XYGC_K_MAX_TRACES], arrayTail[XYGC_K_MAX_TRACES],
 
 int effectiveCount[XYGC_K_MAX_TRACES], totalCount[XYGC_K_MAX_TRACES];
 
-ProcessVariable *traceCtlPv, *resetPv, *trigPv;
-int initialTraceCtlConnection, initialResetConnection, initialTrigConnection;
-expStringClass traceCtlPvExpStr, trigPvExpStr, resetPvExpStr;
+ProcessVariable *resetPv, *trigPv;
+int initialResetConnection, initialTrigConnection;
+expStringClass trigPvExpStr, resetPvExpStr;
 
 int count, bufferScrollSize, plotStyle[XYGC_K_MAX_TRACES], plotMode, resetMode;
 int firstTimeSample, curSec, curNsec, drawGridFlag, special[XYGC_K_MAX_TRACES];
-
-int traceCtl;
 
 int xAxis, xAxisStyle, xAxisSource, xAxisTimeFormat;
 efDouble xMin, xMax;
@@ -834,8 +808,6 @@ efInt xNumMinorPerMajor;
 int xMinorGrid;
 efInt xAnnotationPrecision;
 int xAnnotationFormat;
-int xGridMode;
-int xAxisSmoothing;
 
 efInt y1NumLabelIntervals[NUM_Y_AXES];
 int y1LabelGrid[NUM_Y_AXES];
@@ -845,8 +817,6 @@ efInt y1NumMinorPerMajor[NUM_Y_AXES];
 int y1MinorGrid[NUM_Y_AXES];
 efInt y1AnnotationPrecision[NUM_Y_AXES];
 int y1AnnotationFormat[NUM_Y_AXES];
-int y1GridMode[NUM_Y_AXES];
-int y1AxisSmoothing[NUM_Y_AXES];
 
 efInt y2NumLabelIntervals;
 int y2LabelGrid;
@@ -858,7 +828,7 @@ efInt y2AnnotationPrecision;
 int y2AnnotationFormat;
 
 int xPvExists[XYGC_K_MAX_TRACES], yPvExists[XYGC_K_MAX_TRACES],
- traceCtlPvExists, trigPvExists, resetPvExists;
+ trigPvExists, resetPvExists;
 
 double xFactor[XYGC_K_MAX_TRACES], xOffset[XYGC_K_MAX_TRACES];
 double y1Factor[NUM_Y_AXES][XYGC_K_MAX_TRACES],
@@ -868,8 +838,7 @@ double y2Factor[XYGC_K_MAX_TRACES], y2Offset[XYGC_K_MAX_TRACES];
 Widget plotWidget;
 
 int needConnect, needInit, needRefresh, needUpdate, needErase, needDraw,
- needResetConnect, needReset, needTrigConnect, needTrig,
- needTraceCtlConnect, needTraceUpdate, needXRescale,
+ needResetConnect, needReset, needTrigConnect, needTrig, needXRescale,
  needY1Rescale[NUM_Y_AXES], needY2Rescale, needBufferScroll, needVectorUpdate,
  needRealUpdate, needBoxRescale, needNewLimits, needOriginalLimits,
  needAutoScaleUpdate;

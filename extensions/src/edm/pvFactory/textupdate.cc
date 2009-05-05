@@ -10,7 +10,7 @@
 #include "textupdate.h"
 #include "app_pkg.h"
 #include "act_win.h"
-#include "pv_factory.h"
+#include "epics_pv_factory.h"
 #include "cvtFast.h"
 
 static int g_transInit = 1;
@@ -1463,24 +1463,20 @@ void edmTextentryClass::text_entered_callback(Widget w,
                     ProcessVariable::Type::enumerated)
                 {
                     num = strtod(text, 0);
-                    me->pv->put(
-                     XDisplayName(me->actWin->appCtx->displayName),num);
+                    me->pv->put(num);
                 }
                 else
                 {
-                    me->pv->put(
-                     XDisplayName(me->actWin->appCtx->displayName),text);
+                    me->pv->put(text);
                 }
                 break;
             case dm_hex:
                 hexnum = strtol(text, 0, 16);
                 // fprintf( stderr,"Text: %s -> %d\n", text, hexnum);
-                me->pv->put(
-                 XDisplayName(me->actWin->appCtx->displayName),hexnum);
+                me->pv->put(hexnum);
                 break;
             default:
-                me->pv->put(
-                 XDisplayName(me->actWin->appCtx->displayName),text);
+                me->pv->put(text);
         }
     }
     XtFree(text);

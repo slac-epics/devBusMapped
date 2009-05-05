@@ -6,10 +6,8 @@ ifdef EPICS_HOST_ARCH
 #====================================================================
 # Required by EDM on Solaris at SLAC
 #====================================================================
-#PNG_LIB=/afs/slac/package/graphics/png/1.0.14/sun4x_57/lib
-#PNG_INC=/afs/slac/package/graphics/png/1.0.14/common/include
-PNG_LIB=/usr/lib
-PNG_INC=/usr/include
+PNG_LIB=/afs/slac/package/graphics/png/1.0.14/sun4x_57/lib
+PNG_INC=/afs/slac/package/graphics/png/1.0.14/common/include
 
    SHARED_LIBRARIES = YES
 
@@ -22,21 +20,22 @@ PNG_INC=/usr/include
    USR_LIBS += EdmBase cfcaa62e-8199-11d3-a77f-00104b8742df
 
    USR_LIBS_Linux += Xm Xt Xp Xtst X11
-   USR_SYS_LIBS_Linux += pthread dl png z
-
+   USR_SYS_LIBS_Linux += pthread dl png
+   
    USR_LIBS_Darwin += Xm Xt Xp Xtst X11
-   USR_SYS_LIBS_Darwin += pthread dl png z
+   USR_SYS_LIBS_Darwin += pthread dl png
 
    USR_LIBS_solaris +=  Xm Xt Xmu X11 Xext
    USR_SYS_LIBS_solaris += pthread dl rt png z
 
    USR_LIBS_hpux11_11_mt = Xm Xt X11 Xext
-   USR_SYS_LIBS_hpux11_11_mt = pthread png z
-
+   USR_SYS_LIBS_hpux11_11_mt = pthread png
+   
+   
    LIBRARY = 57d79238-2924-420b-ba67-dfbecdf03fcd
 
    INSTALL_INCLUDE = $(INSTALL_LOCATION)/include/edm
-   USR_INCLUDES += -I../../util -I../../lib
+   USR_INCLUDES += -I../../util -I../../lib -I../../pvlib
 
    USR_INCLUDES += -I$(MOTIF_INC) -I$(X11_INC)
    USR_INCLUDES_solaris += -I$(PNG_INC)

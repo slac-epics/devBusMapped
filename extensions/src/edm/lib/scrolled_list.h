@@ -58,11 +58,6 @@ static void setLower (
   XtPointer client,
   XtPointer call );
 
-static void setReplace (
-  Widget w,
-  XtPointer client,
-  XtPointer call );
-
 static void setFileDoFilter (
   Widget w,
   XtPointer client,
@@ -104,11 +99,6 @@ friend void setLower (
   XtPointer client,
   XtPointer call );
 
-friend void setReplace (
-  Widget w,
-  XtPointer client,
-  XtPointer call );
-
 friend void setFileDoFilter (
   Widget w,
   XtPointer client,
@@ -137,8 +127,8 @@ friend void slc_dismiss (
 Display *display;
 Widget shell, pane, formTop, fileLabel, file, filterLabel, filter,
  prefixLabel, prefix, rowColTop, formMid, formBot, list, text,
- dismiss_pb, lcTb, ucTb, replTb;
-int totalItems, numItems, numVisibleItems, windowIsOpen, upper, lower, replace;
+ dismiss_pb, lcTb, ucTb;
+int totalItems, numItems, numVisibleItems, windowIsOpen, upper, lower;
 char filterString[63+1], prefixString[31+1], fileName[127+1];
 ItemListPtr head, tail;
 

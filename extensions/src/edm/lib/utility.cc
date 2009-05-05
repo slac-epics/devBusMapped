@@ -2298,14 +2298,12 @@ int parseSymbolsAndValues (
   // and v1, v2, v3, ... into values
 
 int l;
-char *context, *tk, buf[10000+1];
+char *context, *tk, buf[511+1];
 
   if ( !string ) return 100; // fail
 
-  l = strlen(string);
-  if ( l > 10000 ) l = 10000;
-  strncpy( buf, string, l );
-  buf[l] = 0;
+  strncpy( buf, string, 511 );
+  buf[511] = 0;
 
   *numFound = 0;
   context = NULL;
@@ -2319,9 +2317,7 @@ char *context, *tk, buf[10000+1];
     trimWhiteSpace( symbols[*numFound] );
 
     tk = strtok_r( NULL, ",=", &context );
-    if ( !tk ) {
-      return 101; // missing value
-    }
+    if ( !tk ) return 101; // missing value
 
     if ( strcmp( tk, "''" ) == 0 ) {
       l = 1;
@@ -2368,14 +2364,12 @@ int parseLocalSymbolsAndValues (
   // and v1, v2, v3, ... into values
 
 int l;
-char *context, *tk, buf[10000+1];
+char *context, *tk, buf[511+1];
 
   if ( !string ) return 100; // fail
 
-  l = strlen(string);
-  if ( l > 10000 ) l = 10000;
-  strncpy( buf, string, l );
-  buf[l] = 0;
+  strncpy( buf, string, 511 );
+  buf[511] = 0;
 
   *numFound = 0;
   context = NULL;
@@ -2768,7 +2762,7 @@ int num_label_ticks, stat;
 
 }
 
-int formatString (
+static int formatString (
   double value,
   char *string,
   int len
@@ -2779,38 +2773,11 @@ char buf[128];
   if ( !string ) return 0;
   if ( len < 1 ) return 0;
 
-  snprintf( buf, 127, "%-g", value );
-  buf[127] = 0;
+  sprintf( buf, "%-g", value );
 
   if ( strlen(buf) > 8 ) {
-    snprintf( buf, 127, "%-3g", value );
-    buf[127] = 0;
+    sprintf( buf, "%-3g", value );
   }
-
-  strncpy( string, buf, len );
-
-  return 1;
-
-}
-
-int formatString (
-  double value,
-  char *string,
-  int len,
-  char *fmt
-) {
-
-char buf[128];
-
-  if ( !string ) return 0;
-  if ( len < 1 ) return 0;
-
-  if ( !fmt ) {
-    return formatString( value, string, len );
-  }
-
-  snprintf( buf, 127, fmt, value );
-  buf[127] = 0;
 
   strncpy( string, buf, len );
 
@@ -3068,7 +3035,7 @@ time_t theTime;
     y0 = y;
     y1 = y0 + label_tick_height;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x1, y0-gridHeight );
       }
@@ -3078,7 +3045,6 @@ time_t theTime;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -3321,8 +3287,7 @@ void drawXLinearScale (
   int annotateScale,
   int minConstrained,
   int maxConstrained,
-  int erase,
-  char *fmt
+  int erase
 ) {
 
 int count, ii, iii, x0, y0, x1, y1;
@@ -3404,7 +3369,7 @@ int reverse = 0;
     y0 = y;
     y1 = y0 + label_tick_height;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x1, y0-gridHeight );
       }
@@ -3414,7 +3379,6 @@ int reverse = 0;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -3428,29 +3392,14 @@ int reverse = 0;
       y1 = y0 + (int) ( 1.2 * label_tick_height );
       z = fabs( labelVal - 0.0 ) / labelInc;
       if ( z < 1e-5 ) {
-        if ( fmt ) {
-          formatString( 0.0, buf, 31, fmt );
-	}
-	else {
-          formatString( 0.0, buf, 31 );
-	}
+        formatString( 0.0, buf, 31 );
       }
       else {
 	if ( reverse ) {
-          if ( fmt ) {
-            formatString( -1*labelVal, buf, 31, fmt );
-	  }
-	  else {
-            formatString( -1*labelVal, buf, 31 );
-	  }
+          formatString( -1*labelVal, buf, 31 );
 	}
 	else {
-          if ( fmt ) {
-            formatString( labelVal, buf, 31, fmt );
-	  }
-	  else {
-            formatString( labelVal, buf, 31 );
-	  }
+          formatString( labelVal, buf, 31 );
 	}
       }
       if ( minConstrained ) {
@@ -3594,29 +3543,14 @@ int reverse = 0;
     y1 = y0 + (int) ( 1.2 * label_tick_height );
     z = fabs( labelVal - 0.0 ) / labelInc;
     if ( z < 1e-5 ) {
-      if ( fmt ) {
-        formatString( 0.0, buf, 31, fmt );
-      }
-      else {
-        formatString( 0.0, buf, 31 );
-      }
+      formatString( 0.0, buf, 31 );
     }
     else {
       if ( reverse ) {
-        if ( fmt ) {
-          formatString( -1*labelVal, buf, 31, fmt );
-	}
-	else {
-          formatString( -1*labelVal, buf, 31 );
-	}
+        formatString( -1*labelVal, buf, 31 );
       }
       else {
-        if ( fmt ) {
-          formatString( labelVal, buf, 31, fmt );
-	}
-	else {
-          formatString( labelVal, buf, 31 );
-	}
+        formatString( labelVal, buf, 31 );
       }
     }
     if ( maxConstrained ) {
@@ -3639,66 +3573,6 @@ int reverse = 0;
 
   gc->restoreFg();
   gc->restoreBg();
-
-}
-
-void drawXLinearScale (
-  Display *d,
-  Window win,
-  gcClass *gc,
-  int drawScale,
-  int x,
-  int y,
-  int scaleLen,
-  double adj_min,
-  double adj_max,
-  int num_label_ticks,
-  int majors_per_label,
-  int minors_per_major,
-  unsigned int scaleColor,
-  unsigned int bgColor,
-  int labelGrid,
-  int majorGrid,
-  int minorGrid,
-  int gridHeight,
-  unsigned int gridColor,
-  fontInfoClass *fi,
-  char *fontTag,
-  XFontStruct *fs,
-  int annotateScale,
-  int minConstrained,
-  int maxConstrained,
-  int erase
-) {
-
-  drawXLinearScale (
-   d,
-   win,
-   gc,
-   drawScale,
-   x,
-   y,
-   scaleLen,
-   adj_min,
-   adj_max,
-   num_label_ticks,
-   majors_per_label,
-   minors_per_major,
-   scaleColor,
-   bgColor,
-   labelGrid,
-   majorGrid,
-   minorGrid,
-   gridHeight,
-   gridColor,
-   fi,
-   fontTag,
-   fs,
-   annotateScale,
-   minConstrained,
-   maxConstrained,
-   erase,
-   NULL );
 
 }
 
@@ -3817,7 +3691,7 @@ int reverse = 0;
 
     if ( ( x0 >= x ) && ( x0 <= ( x + scaleLen ) ) ) {
 
-      if ( labelGrid && count ) {
+      if ( labelGrid && count++ ) {
         if ( erase ) {
           XDrawLine( d, win, gc->eraseGC(), x0, y0, x1, y0-gridHeight );
         }
@@ -3880,7 +3754,6 @@ int reverse = 0;
       }
 
     }
-    count++;
 
     if ( majors_per_label > 0 ) {
 
@@ -3962,9 +3835,9 @@ int reverse = 0;
 
               }
 
-	    }
+              minorVal += minorInc;
 
-            minorVal += minorInc;
+	    }
 
 	  }
 
@@ -4152,7 +4025,7 @@ unsigned int white, black;
     y0 = y;
     y1 = y0 + label_tick_height;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x1, y0-gridHeight );
       }
@@ -4162,7 +4035,6 @@ unsigned int white, black;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -4538,8 +4410,7 @@ void drawYLinearScale (
   int annotateScale,
   int minConstrained,
   int maxConstrained,
-  int erase,
-  char *fmt
+  int erase
 ) {
 
 int count, ii, iii, x0, y0, x1, y1;
@@ -4621,7 +4492,7 @@ int reverse = 0;
     y0 = (int) rint( yOffset - ( labelVal - adj_min ) * yFactor );
     y1 = y0;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x0+gridLen, y1 );
       }
@@ -4631,7 +4502,6 @@ int reverse = 0;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -4646,29 +4516,14 @@ int reverse = 0;
       y1 = y0 - (int) ( fontHeight * 0.5 );
       z = fabs( labelVal - 0.0 ) / labelInc;
       if ( z < 1e-5 ) {
-        if ( fmt ) {
-          formatString( 0.0, buf, 31, fmt );
-	}
-	else {
-          formatString( 0.0, buf, 31 );
-	}
+        formatString( 0.0, buf, 31 );
       }
       else {
 	if ( reverse ) {
-          if ( fmt ) {
-            formatString( -1*labelVal, buf, 31, fmt );
-	  }
-	  else {
-            formatString( -1*labelVal, buf, 31 );
-	  }
+          formatString( -1*labelVal, buf, 31 );
 	}
 	else {
-          if ( fmt ) {
-            formatString( labelVal, buf, 31, fmt );
-	  }
-	  else {
-            formatString( labelVal, buf, 31 );
-	  }
+          formatString( labelVal, buf, 31 );
 	}
       }
       if ( minConstrained ) {
@@ -4810,29 +4665,14 @@ int reverse = 0;
     y1 = y0 - (int) ( fontHeight * 0.5 );
     z = fabs( labelVal - 0.0 ) / labelInc;
     if ( z < 1e-5 ) {
-      if ( fmt ) {
-        formatString( 0.0, buf, 31, fmt );
-      }
-      else {
-        formatString( 0.0, buf, 31 );
-      }
+      formatString( 0.0, buf, 31 );
     }
     else {
       if ( reverse ) {
-        if ( fmt ) {
-          formatString( -1*labelVal, buf, 31, fmt );
-	}
-	else {
-          formatString( -1*labelVal, buf, 31 );
-	}
+        formatString( -1*labelVal, buf, 31 );
       }
       else {
-        if ( fmt ) {
-          formatString( labelVal, buf, 31, fmt );
-	}
-	else {
-          formatString( labelVal, buf, 31 );
-	}
+        formatString( labelVal, buf, 31 );
       }
     }
     if ( maxConstrained ) {
@@ -4855,66 +4695,6 @@ int reverse = 0;
  
   gc->restoreFg();
   gc->restoreBg();
-
-}
-
-void drawYLinearScale (
-  Display *d,
-  Window win,
-  gcClass *gc,
-  int drawScale,
-  int x,
-  int y,
-  int scaleHeight,
-  double adj_min,
-  double adj_max,
-  int num_label_ticks,
-  int majors_per_label,
-  int minors_per_major,
-  unsigned int scaleColor,
-  unsigned int bgColor,
-  int labelGrid,
-  int majorGrid,
-  int minorGrid,
-  int gridLen,
-  unsigned int gridColor,
-  fontInfoClass *fi,
-  char *fontTag,
-  XFontStruct *fs,
-  int annotateScale,
-  int minConstrained,
-  int maxConstrained,
-  int erase
-) {
-
-  drawYLinearScale (
-   d,
-   win,
-   gc,
-   drawScale,
-   x,
-   y,
-   scaleHeight,
-   adj_min,
-   adj_max,
-   num_label_ticks,
-   majors_per_label,
-   minors_per_major,
-   scaleColor,
-   bgColor,
-   labelGrid,
-   majorGrid,
-   minorGrid,
-   gridLen,
-   gridColor,
-   fi,
-   fontTag,
-   fs,
-   annotateScale,
-   minConstrained,
-   maxConstrained,
-   erase,
-   NULL );
 
 }
 
@@ -5035,7 +4815,7 @@ int reverse = 0;
 
     if ( ( y0 <= y ) && ( y0 >= ( y - scaleHeight ) ) ) {
 
-      if ( labelGrid && count ) {
+      if ( labelGrid && count++ ) {
         if ( erase ) {
           XDrawLine( d, win, gc->eraseGC(), x0, y0, x0+gridLen, y1 );
         }
@@ -5100,7 +4880,6 @@ int reverse = 0;
       }
 
     }
-    count++;
 
     if ( majors_per_label > 0 ) {
 
@@ -5181,9 +4960,9 @@ int reverse = 0;
 
               }
 
-            }
+              minorVal += minorInc;
 
-            minorVal += minorInc;
+            }
 
           }
 
@@ -5383,7 +5162,7 @@ int reverse = 0;
     y0 = (int) rint( yOffset - ( labelVal - adj_min ) * yFactor );
     y1 = y0;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         //XDrawLine( d, win, gc->eraseGC(), x0, y0, x0+gridLen, y1 );
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x0-gridLen, y1 );
@@ -5395,7 +5174,6 @@ int reverse = 0;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -5728,7 +5506,7 @@ int reverse = 0;
 
     if ( ( y0 <= y ) && ( y0 >= ( y - scaleHeight ) ) ) {
 
-      if ( labelGrid && count ) {
+      if ( labelGrid && count++ ) {
         if ( erase ) {
           XDrawLine( d, win, gc->eraseGC(), x0, y0, x0-gridLen, y1 );
         }
@@ -5793,7 +5571,6 @@ int reverse = 0;
       }
 
     }
-    count++;
 
     if ( majors_per_label > 0 ) {
 
@@ -5874,9 +5651,9 @@ int reverse = 0;
 
               }
 
-            }
+              minorVal += minorInc;
 
-            minorVal += minorInc;
+            }
 
           }
 
@@ -6077,7 +5854,7 @@ unsigned int white, black;
     y0 = (int) rint( yOffset - ( labelVal - adj_min ) * yFactor );
     y1 = y0;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x0+gridLen, y1 );
       }
@@ -6087,7 +5864,6 @@ unsigned int white, black;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 
@@ -6376,7 +6152,7 @@ unsigned int white, black;
     y0 = (int) rint( yOffset - ( labelVal - adj_min ) * yFactor );
     y1 = y0;
 
-    if ( labelGrid && count ) {
+    if ( labelGrid && count++ ) {
       if ( erase ) {
         XDrawLine( d, win, gc->eraseGC(), x0, y0, x0-gridLen, y1 );
       }
@@ -6386,7 +6162,6 @@ unsigned int white, black;
         gc->setFG( scaleColor );
       }
     }
-    count++;
 
     if ( drawScale ) {
 

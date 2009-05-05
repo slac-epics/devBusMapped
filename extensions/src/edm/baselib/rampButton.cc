@@ -432,9 +432,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -446,9 +444,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -460,9 +456,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -471,9 +465,7 @@ struct timeval curTime;
   }
 
   if ( rbto->destExists ) {
-    rbto->destPvId->put(
-     XDisplayName(rbto->actWin->appCtx->displayName),
-     dval );
+    rbto->destPvId->put( dval );
   }
 
 }
@@ -516,9 +508,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -530,9 +520,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -544,9 +532,7 @@ struct timeval curTime;
     rbto->incrementTimerActive = 0;
     rbto->buttonPressed = 0;
     if ( rbto->rampStateExists ) {
-      rbto->rampStatePvId->put(
-       XDisplayName(rbto->actWin->appCtx->displayName),
-       rbto->buttonPressed );
+      rbto->rampStatePvId->put( rbto->buttonPressed );
     }
     rbto->actWin->appCtx->proc->lock();
     rbto->needRefresh = 1;
@@ -555,9 +541,7 @@ struct timeval curTime;
   }
 
   if ( rbto->destExists ) {
-    rbto->destPvId->put(
-     XDisplayName(rbto->actWin->appCtx->displayName),
-     dval );
+    rbto->destPvId->put( dval );
   }
 
 }
@@ -1583,11 +1567,6 @@ int activeRampButtonClass::deactivate (
 
   if ( rampStateExists ) {
     if ( rampStatePvId ) {
-      if ( rampStateExists ) {
-        rampStatePvId->put(
-         XDisplayName(actWin->appCtx->displayName),
-         0 );
-      }
       rampStatePvId->remove_conn_state_callback( rbtc_monitor_rampState_connect_state,
        this );
       rampStatePvId->release();
@@ -1664,9 +1643,7 @@ double dval;
     buttonPressed = 0;
 
     if ( rampStateExists ) {
-      rampStatePvId->put(
-       XDisplayName(actWin->appCtx->displayName),
-       buttonPressed );
+      rampStatePvId->put( buttonPressed );
     }
 
     actWin->appCtx->proc->lock();
@@ -1681,9 +1658,7 @@ double dval;
   buttonPressed = 1;
 
   if ( rampStateExists ) {
-    rampStatePvId->put(
-     XDisplayName(actWin->appCtx->displayName),
-     buttonPressed );
+    rampStatePvId->put( buttonPressed );
   }
 
   actWin->appCtx->proc->lock();
@@ -1725,9 +1700,7 @@ double dval;
     incrementTimerActive = 0;
     buttonPressed = 0;
     if ( rampStateExists ) {
-      rampStatePvId->put(
-       XDisplayName(actWin->appCtx->displayName),
-       buttonPressed );
+      rampStatePvId->put( buttonPressed );
     }
     actWin->appCtx->proc->lock();
     needRefresh = 1;
@@ -1953,9 +1926,7 @@ int stat, index, invisColor;
       initialRampStateValueConnection = 0;
 
       if ( rampStateExists ) {
-        rampStatePvId->put(
-         XDisplayName(actWin->appCtx->displayName),
-         0 );
+        rampStatePvId->put( 0 );
       }
 
     }

@@ -78,9 +78,7 @@ short value;
 
       if ( w == mbto->pb[i] ) {
         value = (short) i;
-        mbto->controlPvId->put(
-         XDisplayName(mbto->actWin->appCtx->displayName),
-         value );
+        mbto->controlPvId->put( value );
         break;
       }
 

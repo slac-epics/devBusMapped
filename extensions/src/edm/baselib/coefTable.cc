@@ -921,13 +921,10 @@ const double *array;
     if ( first < 0 ) first = 0;
     if ( first > max-1 ) first = max - 1;
 
-    if ( numEle == 0 ) {
+    if ( numEle == 0 )
       num = numLabels;
-      if ( num == 0 ) num = max;
-    }
-    else {
+    else
       num = numEle;
-    }
 
     last = first + num;
     if ( last > max ) last = max;

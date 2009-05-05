@@ -203,8 +203,6 @@ typedef struct editBufTag {
   int bufTopShadowColor;
   int bufBotShadowColor;
   int bufInconsistentColor;
-  efInt bufEfControlBitPos;
-  efInt bufEfReadBitPos;
   colorButtonClass fgCb;
   colorButtonClass onCb;
   colorButtonClass offCb;
@@ -290,13 +288,6 @@ double colorValue, curColorValue;
 int needColorConnectInit, needColorInit, needColorUpdate;
 
 int oldStat, oldSev;
-
-int controlIsBit, readIsBit;
-efInt efControlBitPos, efReadBitPos;
-int controlBitPos, readBitPos; // 0-31
-int prevControlBit, prevReadBit;
-int controlBit, readBit;
-int initControlBit, initReadBit;
 
 public:
 

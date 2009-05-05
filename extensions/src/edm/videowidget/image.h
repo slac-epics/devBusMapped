@@ -17,8 +17,7 @@ imageClass (
   Colormap _cmap,
   GC _gc,
   int _w,
-  int _h,
-  int _nbits
+  int _h
 );
 
 ~imageClass ( void );
@@ -48,14 +47,6 @@ void transformImageData (
   double *src
 );
 
-// Convert value into index in the palette of XImage
-unsigned char convert (
-  double d
-) {
-	if(d<0) d = d + (1<<nbits);
-	return ((unsigned int)d)>>(nbits-8);
-};
-
 Display *display;
 XImage *image;
 Colormap cmap;
@@ -69,7 +60,6 @@ int srcMaxIndex, w, h, size;
 int oldDestW, oldDestH;
 int valid;
 int preserveAspectFlag;
-int nbits;
 
 };
 

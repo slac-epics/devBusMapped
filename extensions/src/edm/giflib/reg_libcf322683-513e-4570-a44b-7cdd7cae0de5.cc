@@ -18,7 +18,6 @@
 
 #include "reg_libcf322683-513e-4570-a44b-7cdd7cae0de5.str"
 #include "environment.str"
-#include "edm.version"
 
 typedef struct libRecTag {
   char *className;
@@ -36,17 +35,9 @@ static libRecType libRec[] = {
 extern "C" {
 #endif
 
-char *version ( void ) {
-
-static char *v = VERSION;
-
-  return v;
-
-}
-
 char *author ( void ) {
 
-static char *a = "John Sinclair (sinclairjw@ornl.gov)";
+static char *a = "John Sinclair (sinclair@mail.phy.ornl.gov)";
 
   return a;
 

@@ -141,14 +141,9 @@ char *pTitle;
 
   display = XtDisplay( top );
 
-  //shell = XtVaAppCreateShell( "edm", "edm",
-  // topLevelShellWidgetClass,
-  // XtDisplay(top),
-  // XtNmappedWhenManaged, False,
-  // NULL );
-
-  shell = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-   top,
+  shell = XtVaAppCreateShell( "edm", "edm",
+   topLevelShellWidgetClass,
+   XtDisplay(top),
    XtNmappedWhenManaged, False,
    NULL );
 

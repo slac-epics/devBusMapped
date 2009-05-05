@@ -26,7 +26,6 @@
 #include <math.h>
 #include "app_pkg.h"
 #include "act_win.h"
-#include "lookup.h"
 
 #include "thread.h"
 #include "crc.h"
@@ -69,7 +68,7 @@ static void extractName(
   char *fileName, 
   char *name ) {
 
-int i, l, more;
+int i, l;
 char *gotOne;
 
   gotOne = strstr( fileName, "/" );
@@ -77,24 +76,14 @@ char *gotOne;
 
     strncpy( name, fileName, 255 );
 
-    // remove extension if .edl
+    // remove extension
     l = strlen( name );
 
-    more = 1;
-    for ( i=l-1; (i>=0) && more; i-- ) {
-
+    for ( i=0; i<l; i++ ) {
       if ( name[i] == '.' ) {
-
-	more = 0;
-
-        if ( l-i >= 4 ) {
-          if ( strcmp( &name[i], ".edl" ) == 0 ) {
-	    name[i] = 0;
-	  }
-	}
-
+        name[i] = 0;
+        return;
       }
-
     }
 
     return;
@@ -115,25 +104,15 @@ char *gotOne;
 
   }
 
-  // remove extension if .edl
+  // remove extension
   l = strlen( name );
 
-    more = 1;
-    for ( i=l-1; (i>=0) && more; i-- ) {
-
-      if ( name[i] == '.' ) {
-
-	more = 0;
-
-        if ( l-i >= 3 ) {
-          if ( strcmp( &name[i], ".edl" ) == 0 ) {
-	    name[i] = 0;
-	  }
-	}
-
-      }
-
+  for ( i=0; i<l; i++ ) {
+    if ( name[i] == '.' ) {
+      name[i] = 0;
+      return;
     }
+  }
 
 }
 
@@ -5858,7 +5837,7 @@ activeWindowClass *awo;
           XtVaSetValues(awo->drawWidget,
            XmNwidth, (Dimension)ce->width,
            XmNheight, (Dimension)ce->height,
-	   NULL);
+           0);
 
           if ( awo->scroll ) {
             XtVaSetValues(awo->scroll,
@@ -10264,18 +10243,6 @@ done:
 
 activeWindowClass::activeWindowClass ( void ) : unknownTags() {
 
-char *str;
-
-  windowState = AWC_INIT;
-
-  str = getenv( "EDMCLEAREPICSDEFAULT" );
-  if ( str ) {
-    clearEpicsPvTypeDefault = 1;
-  }
-  else {
-    clearEpicsPvTypeDefault = 0;
-  }
-
   strcpy( startSignature, "edmActiveWindow" );
   strcpy( endSignature, "wodniWevitcAmde" );
 
@@ -10493,6 +10460,8 @@ int activeWindowClass::okToDeactivate ( void ) {
 
 activeGraphicListPtr cur, next;
 
+  if ( mode != AWC_EXECUTE ) return 1;
+
   cur = head->flink;
   while ( cur != head ) {
     next = cur->flink;
@@ -10500,11 +10469,7 @@ activeGraphicListPtr cur, next;
     cur = next;
   }
 
-  if ( windowState == AWC_COMPLETE_EXECUTE ) {
-    return 1;
-  }
-
-  return 0;
+  return 1;
 
 }
 
@@ -10598,10 +10563,6 @@ commentLinesPtr commentCur, commentNext;
 pvDefPtr pvDefCur, pvDefNext;
 
   //if ( !isEmbedded ) fprintf( stderr, "Destroy - [%s]\n", fileNameForSym );
-
-  windowState = AWC_TERMINATED;
-
-  if ( top ) XtUnmapWidget( top );  //??????? XtUnmapWidget
 
   if ( dragPopup ) {
     XtDestroyWidget( dragPopup );
@@ -10782,9 +10743,7 @@ pvDefPtr pvDefCur, pvDefNext;
 
   if ( objNameDialogCreated ) objNameDialog.destroy();
 
-#if 1
   if ( top ) XtDestroyWidget( top );
-#endif
 
   // need to deallocate widget address used for top if this was an
   // embedded window
@@ -11354,11 +11313,11 @@ char tmp[10];
 #ifndef ADD_SCROLLED_WIN
   if ( !parent ) {
 
-    top = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-     appCtx->apptop(),
+    top = XtVaAppCreateShell( "edm", "edm", topLevelShellWidgetClass,
+     d,
      XmNmappedWhenManaged, False,
      XmNmwmDecorations, windowDecorations,
-     XmNresizePolicy, XmRESIZE_NONE,
+     XmNresizePolicy, XmRESIZE_GROW,
      NULL );
 
     drawWidget = XtVaCreateManagedWidget( "screen", xmDrawingAreaWidgetClass,
@@ -11366,7 +11325,7 @@ char tmp[10];
      XmNwidth, w,
      XmNheight, h,
      XmNmappedWhenManaged, False,
-     XmNresizePolicy, XmRESIZE_NONE,
+     XmNresizePolicy, XmRESIZE_GROW,
      NULL );
 
   }
@@ -11389,7 +11348,7 @@ char tmp[10];
      XmNwidth, w,
      XmNheight, h,
      XmNmappedWhenManaged, False,
-     XmNresizePolicy, XmRESIZE_NONE,
+     XmNresizePolicy, XmRESIZE_GROW,
      XmNbackground, embBg,
      NULL );
 
@@ -11402,14 +11361,8 @@ char tmp[10];
 
     if ( !parent ) {
 
-      //top = XtVaAppCreateShell( "edm", "edm", topLevelShellWidgetClass,
-      // d,
-      // XmNmappedWhenManaged, False,
-      // XmNmwmDecorations, windowDecorations,
-      // NULL );
-
-      top = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-       appCtx->apptop(),
+      top = XtVaAppCreateShell( "edm", "edm", topLevelShellWidgetClass,
+       d,
        XmNmappedWhenManaged, False,
        XmNmwmDecorations, windowDecorations,
        NULL );
@@ -11450,7 +11403,7 @@ char tmp[10];
 
       drawWidget = XtVaCreateManagedWidget( "screen", xmDrawingAreaWidgetClass,
        scroll ? scroll : top,
-       XmNresizePolicy, XmRESIZE_NONE,
+       XmNresizePolicy, XmRESIZE_GROW,
        XmNx, parent ? x : 0,
        XmNy, parent ? y : 0,
        XmNwidth, w,
@@ -11466,11 +11419,11 @@ char tmp[10];
 
     if ( !parent ) {
 
-      top = XtVaCreatePopupShell( "edm", topLevelShellWidgetClass,
-       appCtx->apptop(),
+      top = XtVaAppCreateShell( "edm", "edm", topLevelShellWidgetClass,
+       d,
        XmNmappedWhenManaged, False,
        XmNmwmDecorations, windowDecorations,
-       XmNresizePolicy, XmRESIZE_NONE,
+       XmNresizePolicy, XmRESIZE_GROW,
        NULL );
 
       drawWidget = XtVaCreateManagedWidget( "screen", xmDrawingAreaWidgetClass,
@@ -11478,7 +11431,7 @@ char tmp[10];
        XmNwidth, w,
        XmNheight, h,
        XmNmappedWhenManaged, False,
-       XmNresizePolicy, XmRESIZE_NONE,
+       XmNresizePolicy, XmRESIZE_GROW,
        NULL );
 
     }
@@ -11501,7 +11454,7 @@ char tmp[10];
        XmNwidth, w,
        XmNheight, h,
        XmNmappedWhenManaged, False,
-       XmNresizePolicy, XmRESIZE_NONE,
+       XmNresizePolicy, XmRESIZE_GROW,
        XmNbackground, embBg,
        NULL );
 
@@ -11537,8 +11490,6 @@ char tmp[10];
    ButtonReleaseMask|Button1MotionMask|
    Button2MotionMask|Button3MotionMask|ExposureMask, False,
    drawWinEventHandler, (XtPointer) this );
-
-  windowState = AWC_COMPLETE_DEACTIVATE;
 
   return 1;
 
@@ -14572,101 +14523,19 @@ int activeWindowClass::renameToBackupFile (
   char *fname )
 {
 
-int stat, found, min, max, num, count;
-char tmp[530+1], spec[520+1], name[511+1], ext[511+1], verstr[10+1],
- *tk, *ctx, *nonInt;
+int stat;
+char tmp[511+1];
 
-char *envPtr;
-int maxver = 1;
+  strncpy( tmp, fname, 510 ); // leave room for ~
+  Strncat( tmp, "~", 511 );
 
-  envPtr = getenv( environment_str18 );
-
-  if ( envPtr ) {
-
-    if ( !strcasecmp( envPtr, activeWindowClass_str211 ) ) {
-      maxver = -1;
-    }
-    else {
-
-      strncpy( tmp, envPtr, 511 );
-      tmp[511] = 0;
-      num = strtol( tmp, &nonInt, 10 );
-      if ( !nonInt || !strcmp( nonInt, "" ) ) {
-	maxver = num;
-      }
-
-      if ( maxver < 1 ) maxver = 1;
-
-    }
-
+  if ( fileExists( tmp ) ) {
+    stat = unlink( tmp );
+    if ( stat ) return 2; // error
   }
-
-  strncpy( spec, fname, 511 );
-  Strncat( spec, "-*", 520 );
-  min = max = count = 0;
-  getFirstFileNameExt( spec, 511, name, 511, ext, &found );
-  while ( found ) {
-    ctx = NULL;
-    tk = strtok_r( ext, "-", &ctx );
-    tk = strtok_r( NULL, "-", &ctx );
-    if ( tk ) {
-      num = strtol( tk, &nonInt, 10 );
-      if ( !nonInt || !strcmp( nonInt, "" ) ) {
-        count++;
-        if ( min ) {
-          if ( min > num ) min = num;
-	}
-	else {
-	  min = num;
-	}
-	if ( max < num ) max = num;
-      }
-    }
-    getNextFileNameExt( spec, 511, name, 511, ext, &found );
-  }
-
-  if ( maxver != 1 ) {
-
-    if ( ( maxver != -1 ) && count >= maxver ) {
-
-      strncpy( tmp, fname, 510 ); // leave room for version info
-      tmp[510] = 0;
-      snprintf( verstr, 10, "-%-d", min ); 
-      Strncat( tmp, verstr, 530 );
-
-      if ( fileExists( tmp ) ) {
-        stat = unlink( tmp );
-        if ( stat ) return 2; // error
-      }
-
-    }
-
-    num = max+1;
-    strncpy( tmp, fname, 510 ); // leave room for version info
-    tmp[510] = 0;
-    snprintf( verstr, 10, "-%-d", num ); 
-    Strncat( tmp, verstr, 530 );
-
-    if ( fileExists( fname ) ) {
-      stat = rename( fname, tmp );
-      if ( stat ) return 4; // error
-    }
-
-  }
-  else {
-
-    strncpy( tmp, fname, 510 ); // leave room for ~
-    Strncat( tmp, "~", 511 );
-
-    if ( fileExists( tmp ) ) {
-      stat = unlink( tmp );
-      if ( stat ) return 2; // error
-    }
-    if ( fileExists( fname ) ) {
-      stat = rename( fname, tmp );
-      if ( stat ) return 4; // error
-    }
-
+  if ( fileExists( fname ) ) {
+    stat = rename( fname, tmp );
+    if ( stat ) return 4; // error
   }
 
   return 1; // success
@@ -15838,8 +15707,6 @@ char **muxMacro, **muxExpansion;
 char callbackName[63+1];
 pvDefPtr pvDefCur;
 
-  windowState = AWC_START_EXECUTE;
-
   if ( diagnosticMode() ) {
     char diagBuf[255+1];
     snprintf( diagBuf, 255, "execute [%s]\n", fileName );
@@ -15854,9 +15721,7 @@ pvDefPtr pvDefCur;
     pvDefCur = pvDefCur->flink;
   }
 
-  if ( blank(defaultPvType) ||
-       ( clearEpicsPvTypeDefault &&
-         ( strcmp( defaultPvType, "EPICS" ) == 0 ) ) ) {
+  if ( blank(defaultPvType) ) {
     the_PV_Factory->clear_default_pv_type();
   }
   else {
@@ -16067,8 +15932,6 @@ pvDefPtr pvDefCur;
 
   refreshActive();
 
-  windowState = AWC_COMPLETE_EXECUTE;
-
   return 1;
 
 }
@@ -16081,8 +15944,6 @@ pvDefPtr pvDefCur;
 
 int numMuxMacros;
 char **muxMacro, **muxExpansion;
-
-  windowState = AWC_START_EXECUTE;
 
   if ( diagnosticMode() ) {
     char diagBuf[255+1];
@@ -16097,9 +15958,7 @@ char **muxMacro, **muxExpansion;
     pvDefCur = pvDefCur->flink;
   }
 
-  if ( blank(defaultPvType) ||
-       ( clearEpicsPvTypeDefault &&
-         ( strcmp( defaultPvType, "EPICS" ) == 0 ) ) ) {
+  if ( blank(defaultPvType) ) {
     the_PV_Factory->clear_default_pv_type();
   }
   else {
@@ -16207,8 +16066,6 @@ char **muxMacro, **muxExpansion;
 
   refreshActive();
 
-  windowState = AWC_COMPLETE_EXECUTE;
-
   return 1;
 
 }
@@ -16229,8 +16086,6 @@ pvDefPtr pvDefCur;
     appCtx->postMessage( activeWindowClass_str193 );
     return 0;
   }
-
-  windowState = AWC_START_DEACTIVATE;
 
   if ( diagnosticMode() ) {
     char diagBuf[255+1];
@@ -16431,8 +16286,6 @@ pvDefPtr pvDefCur;
         }
       }
 
-      windowState = AWC_COMPLETE_DEACTIVATE;
-
       return 1;
 
     }
@@ -16465,8 +16318,6 @@ pvDefPtr pvDefCur;
     }
   }
 
-  windowState = AWC_COMPLETE_DEACTIVATE;
-
   return 1;
 
 }
@@ -16478,13 +16329,6 @@ activeGraphicListPtr cur;
 int numSubObjects, cnt;
 
   if ( mode == AWC_EDIT ) return 1;
-
-  if ( !okToDeactivate() ) {
-    appCtx->postMessage( activeWindowClass_str193 );
-    return 0;
-  }
-
-  windowState = AWC_START_DEACTIVATE;
 
   if ( diagnosticMode() ) {
     char diagBuf[255+1];
@@ -16515,8 +16359,6 @@ int numSubObjects, cnt;
     cur = cur->flink;
 
   }
-
-  windowState = AWC_COMPLETE_DEACTIVATE;
 
   return 1;
 
@@ -17123,9 +16965,6 @@ static int alignEnum[3] = {
   if ( !( stat & 1 ) ) {
     retStat = stat;
     appCtx->postMessage( tag.errMsg() );
-  }
-
-  if ( disableScroll ) {
   }
 
   if ( strcmp( defaultPvType, "epics" ) == 0 ) {
@@ -19372,8 +19211,6 @@ int i, len, iIn, iOut, p0, p1, more, state, winid, isEnvVar;
 
   }
 
-  bufOut[max] = 0;
-
 }
 
 static void dragMenuCb (
@@ -19537,7 +19374,7 @@ void activeWindowClass::closeDeferred (
   int cycles )
 {
 
-  waiting = cycles;
+  waiting = 1;
   doActiveClose = 1;
   appCtx->postDeferredExecutionQueue( this );
 

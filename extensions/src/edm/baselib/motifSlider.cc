@@ -141,8 +141,7 @@ double fvalue;
 
   if ( mslo->controlExists ) {
     if ( mslo->controlPvId ) {
-      stat = mslo->controlPvId->put(
-       XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+      stat = mslo->controlPvId->put( fvalue );
       if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
     }
   }
@@ -200,8 +199,7 @@ double fvalue;
 
   if ( mslo->controlExists ) {
     if ( mslo->controlPvId ) {
-      stat = mslo->controlPvId->put(
-       XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+      stat = mslo->controlPvId->put( fvalue );
       if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
     }
   }
@@ -500,8 +498,7 @@ activeMotifSliderClass *mslo = (activeMotifSliderClass *) client;
 
   if ( mslo->controlExists ) {
     if ( mslo->controlPvId ) {
-      stat = mslo->controlPvId->put(
-       XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+      stat = mslo->controlPvId->put( fvalue );
       if ( !stat ) fprintf( stderr, activeMotifSliderClass_str3 );
       mslo->actWin->appCtx->proc->lock();
       mslo->actWin->addDefExeNode( mslo->aglPtr );
@@ -2268,8 +2265,7 @@ double mult, fvalue;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+          stat = mslo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2320,8 +2316,7 @@ double mult, fvalue;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+          stat = mslo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2434,8 +2429,7 @@ double mult, fvalue;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+          stat = mslo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2449,8 +2443,7 @@ double mult, fvalue;
 
       if ( mslo->savedValueExists ) {
         if ( mslo->savedValuePvId ) {
-          stat = mslo->savedValuePvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), mslo->savedV );
+          stat = mslo->savedValuePvId->put( mslo->savedV );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2471,8 +2464,7 @@ double mult, fvalue;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), mslo->controlV );
+          stat = mslo->controlPvId->put( mslo->controlV );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2662,8 +2654,7 @@ double fvalue, mult;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+          stat = mslo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }
@@ -2714,8 +2705,7 @@ double fvalue, mult;
 
       if ( mslo->controlExists ) {
         if ( mslo->controlPvId ) {
-          stat = mslo->controlPvId->put(
-           XDisplayName(mslo->actWin->appCtx->displayName), fvalue );
+          stat = mslo->controlPvId->put( fvalue );
           if ( !stat ) fprintf( stderr, activeMotifSliderClass_str59 );
         }
       }

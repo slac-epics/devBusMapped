@@ -189,8 +189,6 @@ pvConnectionClass connection;
 
 int bufInvalid;
 
-int savedX, savedW, savedH, savedDims;
-
 public:
 
 static void alarmPvConnectStateCallback (

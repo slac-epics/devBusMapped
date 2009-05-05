@@ -13,8 +13,7 @@ imageClass::imageClass (
   Colormap _cmap,
   GC _gc,
   int _w,
-  int _h,
-  int _nbits
+  int _h
 ) {
 
 int i, x, y, screen_num, depth, result;
@@ -26,7 +25,6 @@ XColor color;
   gc = _gc;
   w = _w;
   h = _h;
-  nbits = _nbits;
 
   screen_num = DefaultScreen( display );
   visual = DefaultVisual( display, screen_num );
@@ -190,7 +188,8 @@ unsigned char c;
 
       i = ( srcX + srcY*srcW );
       if ( i > srcMaxIndex ) i = srcMaxIndex;
-      c = convert(src[i]);
+
+      c = (unsigned char) src[i];
 
       XPutPixel( image, destX, destY, pixels[c] );
 

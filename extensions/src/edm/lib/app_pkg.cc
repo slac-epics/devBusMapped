@@ -442,26 +442,13 @@ libRecPtr head, tail, cur, prev, next;
 
   if ( strcmp( op, global_str8 ) == 0 ) {  // show
 
-    fprintf( stderr, "\n" );
-
-    strcpy( line, "version" );
-    cfunc = (CHARFUNC) dlsym( dllHandle, line );
-    if ((error = dlerror()) == NULL)  {
-      fprintf( stderr, "Built with edm version: %s\n", (*cfunc)() );
-    }
-    else {
-      fprintf( stderr, "edm version not registered\n" );
-    }
-
-    fprintf( stderr, "\n" );
-
     strcpy( line, "author" );
     cfunc = (CHARFUNC) dlsym( dllHandle, line );
     if ((error = dlerror()) == NULL)  {
-      fprintf( stderr, "Author: %s\n", (*cfunc)() );
+      fprintf( stderr, "\nAuthor: %s\n", (*cfunc)() );
     }
     else {
-      fprintf( stderr, "Author name not registered\n" );
+      fprintf( stderr, "\nAuthor name not registered\n" );
     }
 
     fprintf( stderr, "\n" );
@@ -755,8 +742,6 @@ static void managePvComponents (
 
 typedef int (*PVREGFUNC)( char **, char ** );
 PVREGFUNC func;
-typedef char *(*CHARFUNC)( void );
-CHARFUNC cfunc;
 
 int stat, index, comment, fileExists, fileEmpty, doAdd, alreadyExists;
 char *classNamePtr, *textPtr, *error;
@@ -904,17 +889,6 @@ libRecPtr head, tail, cur, prev, next;
   }
 
   if ( strcmp( op, global_str65 ) == 0 ) {  // showpv
-
-    fprintf( stderr, "\n" );
-
-    strcpy( line, "version" );
-    cfunc = (CHARFUNC) dlsym( dllHandle, line );
-    if ((error = dlerror()) == NULL)  {
-      fprintf( stderr, "Built with edm version: %s\n", (*cfunc)() );
-    }
-    else {
-      fprintf( stderr, "edm version not registered\n" );
-    }
 
     fprintf( stderr, "\n" );
 
@@ -2690,7 +2664,7 @@ void appContextClass::expandFileName (
   int maxSize )
 {
 
-unsigned int i, l, first, more;
+unsigned int i;
 int state, noPrefix;
 
   if ( index >= numPaths ) {
@@ -2748,23 +2722,15 @@ int state, noPrefix;
     Strncat( expandedName, inName, maxSize );
   }
 
-
-  // if no extension specified, add ext from argument
-
-  l = strlen(expandedName);
-  more = 1;
-  first = 0;
-  for ( i=l-1; (i>=0) && more; i-- ) {
-    if ( expandedName[i] == '/' ) {
-      more = 0;
-      first = i;
+  if ( strlen(expandedName) > strlen(ext) ) {
+    if ( strcmp( &expandedName[strlen(expandedName)-strlen(ext)], ext )
+     != 0 ) {
+      Strncat( expandedName, ext, maxSize );
     }
   }
-  if ( !strstr( &expandedName[first], "." ) ) {
+  else {
     Strncat( expandedName, ext, maxSize );
   }
-
-  return;
 
 }
 
@@ -4170,8 +4136,6 @@ static void displayParamInfo ( void ) {
 
   fprintf( stderr, global_str97 );
 
-  fprintf( stderr, global_str107 );
-
   fprintf( stderr, global_str103 );
   fprintf( stderr, global_str105 );
 
@@ -4427,9 +4391,6 @@ fileListPtr curFile;
 	}
 	else if ( strcmp( argv[n], global_str100 ) == 0 ) { //disable scroll bars
           useScrollBars = 0;
-	}
-	else if ( strcmp( argv[n], global_str106 ) == 0 ) { //noautomsg
-          msgBox.setAutoOpen( 0 );
 	}
 
         else {
@@ -5955,10 +5916,8 @@ activeWindowListPtr cur;
   cur = head->flink;
   while ( cur != head ) {
 
-    if ( cur->node.windowState != AWC_COMPLETE_DEACTIVATE ) {
-      if ( !cur->node.okToDeactivate() ) {
-        return 0;
-      }
+    if ( !cur->node.okToDeactivate() ) {
+      return 0;
     }
 
     cur = cur->flink;
@@ -6152,16 +6111,6 @@ char *envPtr, text[255+1];
   text[255] = 0;
   postMessage( text );
 
-  envPtr = getenv( environment_str17 );
-  if ( envPtr ) {
-    snprintf( text, 255, "  %s=[%s]", environment_str17, envPtr );
-  }
-  else {
-    snprintf( text, 255, "  %s=[]", environment_str17 );
-  }
-  text[255] = 0;
-  postMessage( text );
-
   envPtr = getenv( "EDMCOMMENTS" );
   if ( envPtr ) {
     snprintf( text, 255, "  %s=[%s]", "EDMCOMMENTS", envPtr );
@@ -6302,10 +6251,3 @@ char *envPtr, text[255+1];
   postMessage( text );
 
 }
-
-Widget appContextClass::apptop ( void ) {
-
-  return appTop;
-
-}
-

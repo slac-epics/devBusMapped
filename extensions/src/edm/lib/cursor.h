@@ -32,7 +32,6 @@
 #define CURSOR_K_RUN 9
 #define CURSOR_K_RUN_WITH_HELP 10
 #define CURSOR_K_UPDOWN 11
-#define CURSOR_K_PNTR_WITH_HELP 12
 
 class cursorClass {
 
@@ -71,11 +70,8 @@ XColor runWithHelpShapeColor, runWithHelpMaskColor;
 Pixmap upDownShape, upDownMask;
 XColor upDownShapeColor, upDownMaskColor;
 
-Pixmap pntrWithHelpShape, pntrWithHelpMask;
-XColor pntrWithHelpShapeColor, pntrWithHelpMaskColor;
-
 Cursor curCursor, crossHair, tinyCrossHair, wait, no, willSet,
- willOpen, willOpenWithHelp, run, runWithHelp, upDown, pntrWithHelp;
+ willOpen, willOpenWithHelp, run, runWithHelp, upDown;
 
 public:
 

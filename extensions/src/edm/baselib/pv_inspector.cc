@@ -615,14 +615,8 @@ activeWindowListPtr cur;
     }
 
     if ( okToClose ) {
-      if ( aw->okToDeactivate() ) {
-        aw->returnToEdit( 1 );
-        aw = NULL;
-      }
-      else {
-        aw->closeDeferred( 20 );
-        aw = NULL;
-      }
+      aw->returnToEdit( 1 );
+      aw = NULL;
     }
 
   }
@@ -1668,8 +1662,6 @@ Atom importList[2];
         textFontList = NULL;
       }
 
-      strcpy( entryValue, "" );
-
       tf_widget = XtVaCreateManagedWidget( "", xmTextFieldWidgetClass,
        actWin->executeWidget,
        XmNx, x,
@@ -2662,14 +2654,8 @@ activeWindowListPtr cur;
       }
 
       if ( okToClose ) {
-        if ( aw->okToDeactivate() ) {
-          aw->returnToEdit( 1 );
-          aw = NULL;
-	}
-        else {
-          aw->closeDeferred( 20 );
-          aw = NULL;
-	}
+        aw->returnToEdit( 1 );
+        aw = NULL;
       }
       else {
         aw = NULL;

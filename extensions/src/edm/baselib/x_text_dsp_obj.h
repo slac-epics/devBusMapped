@@ -51,7 +51,7 @@
 #define XTDC_K_FILE_NAME 2
 
 #define XTDC_MAJOR_VERSION 4
-#define XTDC_MINOR_VERSION 3
+#define XTDC_MINOR_VERSION 2
 #define XTDC_RELEASE 0
 
 #ifdef __x_text_dsp_obj_cc
@@ -557,9 +557,7 @@ XFontStruct *fs;
 int fontAscent, fontDescent, fontHeight, stringLength, stringWidth,
  stringY, stringX, bufInvalid;
 
-IPFUNC changeCallback;
-
-VPFUNC activateCallback, deactivateCallback;
+VPFUNC changeCallback, activateCallback, deactivateCallback;
 int changeCallbackFlag, activateCallbackFlag, deactivateCallbackFlag,
  anyCallbackFlag;
 
@@ -571,9 +569,6 @@ int nullDetectMode;
 
 ProcessVariable *pvId, *svalPvId, *fgPvId;
 
-int fgPvValue;
-int oldChangeResult;
-
 int pvIndex;
 expStringClass pvExpStr, svalPvExpStr, fgPvExpStr;
 char pvName[PV_Factory::MAX_PV_NAME+1];
@@ -583,7 +578,6 @@ expStringClass defDir, pattern;
 int numStates;
 
 int isWidget;
-int handlerInstalled;
 int editable;
 entryFormClass textEntry;
 int teX, teY, teW, teH, teLargestH;
@@ -599,7 +593,7 @@ int widget_value_changed;
 
 int needConnectInit, needInfoInit, needErase, needDraw, needRefresh,
  needUpdate, deferredCount, needToDrawUnconnected, needToEraseUnconnected,
- needFgPvPut, initialConnection;
+ initialConnection;
 int unconnectedTimer;
 
 keypadClass kp;
@@ -610,8 +604,6 @@ calpadClass cp;
 fselectClass fsel;
 
 int grabUpdate;
-int focusIn, focusOut, cursorIn, cursorOut;
-int needInitialValue;
 
 int showUnits;
 char units[MAX_UNITS_SIZE+1];
