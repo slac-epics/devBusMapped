@@ -15,7 +15,7 @@
 #
 file IP231.template
 {
-  pattern { RECNAME,                  CARD  ,  CH, EFUG,  EGUL , ADEL,  MDEL, HIHI,  HIGH, LOW, LOLO, EGU   }
+  pattern { RECNAME,                  CARD  ,  CH, EGUF,  EGUL , ADEL,  MDEL, HIHI,  HIGH, LOW, LOLO, EGU   }
           { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   0, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
           { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   1, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
           { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   2, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
