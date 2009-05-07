@@ -1,7 +1,7 @@
 record(bi, $(DEV) ) {
   field(DESC, "$(DESC)")
   field(SCAN, "$(SCAN)")
-  field(DTYP, "ACROMAG-440")
+  field(DTYP, "ACROMAG-IP440")
   field(INP, "@$(CARD) P$(PORT) B$(CH)")
   field(ZNAM, "$(ZNAM)")
   field(ONAM, "$(ONAM)")
