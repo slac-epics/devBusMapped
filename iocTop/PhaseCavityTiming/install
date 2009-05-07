@@ -1,0 +1,4 @@
+cp -f bin/RTEMS-beatnik/*.obj				~/iocPhaseCavity/bin/RTEMS-beatnik
+cp -f db/*.db								~/iocPhaseCavity/db
+cp -f dbd/*.dbd								~/iocPhaseCavity/dbd
+cp -f iocBoot/iocPhaseCavityTiming/st.cmd	~/iocPhaseCavity/iocBoot/iocPhaseCavityTiming
