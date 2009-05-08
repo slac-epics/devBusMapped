@@ -1,7 +1,7 @@
-## Example RTEMS startup script
+## RTEMS startup script
+## Install this st.cmd in the top of the project directory
 
-## You may have to change PhaseCavityTiming to something else
-## everywhere it appears in this file
+ld( "bin/RTEMS-beatnik/PhaseCavityTiming.obj" )
 
 #< envPaths
 
@@ -49,20 +49,20 @@ setenv("EPICS_CA_MAX_ARRAY_BYTES","2000000",1)
 devVmeDigiConfig(0,0,0x20000000,0x40,3)
 
 # Load EPICS database definition
-dbLoadDatabase("../../dbd/PhaseCavityTiming.dbd",0,0)
+dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
 
 ## Register all support components
 PhaseCavityTiming_registerRecordDeviceDriver(pdbbase) 
 
 ## Load EPICS records
-#dbLoadRecords("../../db/IP231.db","CARD=ao0")
-#dbLoadRecords("../../db/IP330.db","CARD=ai0")
-#dbLoadRecords("../../db/ip440.db","CARD=di0")
-#dbLoadRecords("../../db/ip445.db","CARD=do0")
-dbLoadRecords("../../db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
+#dbLoadRecords("db/IP231.db","CARD=ao0")
+#dbLoadRecords("db/IP330.db","CARD=ai0")
+#dbLoadRecords("db/ip440.db","CARD=di0")
+#dbLoadRecords("db/ip445.db","CARD=do0")
+dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
 # An EDM panel for the digitizer can be
 # started with the command:
-# edm -x -m "digi=<digi>" phaseCavity.edl
+# edm -x -m "digi=<digi>" display/phaseCavity.edl
 
 # Print list of loaded binaries (helpful for debugging)
 lsmod()
