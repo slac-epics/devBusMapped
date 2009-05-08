@@ -55,14 +55,18 @@ dbLoadDatabase("../../dbd/PhaseCavityTiming.dbd",0,0)
 PhaseCavityTiming_registerRecordDeviceDriver(pdbbase) 
 
 ## Load EPICS records
-dbLoadRecords("../../db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
 #dbLoadRecords("../../db/IP231.db","CARD=ao0")
 #dbLoadRecords("../../db/IP330.db","CARD=ai0")
 #dbLoadRecords("../../db/ip440.db","CARD=di0")
 #dbLoadRecords("../../db/ip445.db","CARD=do0")
+dbLoadRecords("../../db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
+# An EDM panel for the digitizer can be
+# started with the command:
+# edm -x -m "digi=<digi>" phaseCavity.edl
 
 # Print list of loaded binaries (helpful for debugging)
 lsmod()
 
+# 
 iocInit()
 
