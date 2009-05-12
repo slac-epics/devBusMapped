@@ -1,4 +1,4 @@
-record(bi, $(DEV) ) {
+record(bi, $(RECORDNAME) ) {
   field(DESC, "$(DESC)")
   field(SCAN, "$(SCAN)")
   field(DTYP, "ACROMAG-IP440")

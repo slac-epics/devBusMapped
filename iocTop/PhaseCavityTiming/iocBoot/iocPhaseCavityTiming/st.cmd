@@ -13,6 +13,9 @@ ld( "bin/RTEMS-beatnik/PhaseCavityTiming.obj" )
 # the client requests it.
 setenv("EPICS_CA_MAX_ARRAY_BYTES","2000000",1)
 
+# Silence BSP warnings
+bspExtVerbosity = 0
+
 # Configure VME digitizers
 #
 #   devVmeDigiConfig(card_no, slot_no, vme_a32_addr, int_vec, int_lvl)
@@ -48,6 +51,33 @@ setenv("EPICS_CA_MAX_ARRAY_BYTES","2000000",1)
 #
 devVmeDigiConfig(0,0,0x20000000,0x40,3)
 
+# Initialize Acromag IPAC carrier
+# Slot 0:	IP440AE   Digital Input
+# Slot 1:	IP445E    Digital Output
+# Slot 2:	IP330AE   Analog  Input
+# Slot 3:	IP231-16E Analog  Output
+ipacAddCarrier(&xy9660,"0x0000")
+
+# Initialize IP440 digital input module
+# xy2440Create( <name>, <card>, <slot>, <modeName>, <intHndlr>, <usrFunc>, <vector>, <event>, <debounce> )
+xy2440Create( "di0", 0, 0, "STANDARD", "LEVEL", 0x0, 0x80, 0x0, 0x00 )
+
+# Initialize IP445 digital output module
+# xy2445Create( <name>, <card>, <slot> )
+#xy2445Create( "do0", 0, 1 )
+
+# Initialize IP330 analog input module
+#ip330Create( "ai0", 0, 2, "0to5D", "ch12-ch15", 0, 0, "burstCont-Output-Avg1", "80*3@8MHz", 0x66 )
+#ip330StartConvertByName( "ai0" )
+
+# Initialize IP231 analog output module
+# ip231Create( <name>, <card>, <slot>, <dacmode> )
+# <dacmode> must be "transparent" or "simultaneous"
+# In transparent mode, outputs are updated when written
+# In simultaneous mode, multiple output values can be setup,
+# and all outputs update when ip231SimulTrigger(<cardNo>) is called
+#ip231Create( "ao0", 0, 3, "transparent" )
+
 # Load EPICS database definition
 dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
 
@@ -57,7 +87,7 @@ PhaseCavityTiming_registerRecordDeviceDriver(pdbbase)
 ## Load EPICS records
 #dbLoadRecords("db/IP231.db","CARD=ao0")
 #dbLoadRecords("db/IP330.db","CARD=ai0")
-#dbLoadRecords("db/ip440.db","CARD=di0")
+dbLoadRecords("db/ip440.db","CARD=di0")
 #dbLoadRecords("db/ip445.db","CARD=do0")
 dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
 # An EDM panel for the digitizer can be
@@ -66,6 +96,10 @@ dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
 
 # Print list of loaded binaries (helpful for debugging)
 lsmod()
+
+# Convenience aliases
+reboot=rtemsReboot
+mon=rtemsMonitor
 
 # 
 iocInit()
