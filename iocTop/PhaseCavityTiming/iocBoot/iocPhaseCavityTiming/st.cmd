@@ -64,7 +64,7 @@ xy2440Create( "di0", 0, 0, "STANDARD", "LEVEL", 0x0, 0x80, 0x0, 0x00 )
 
 # Initialize IP445 digital output module
 # xy2445Create( <name>, <card>, <slot> )
-#xy2445Create( "do0", 0, 1 )
+xy2445Create( "do0", 0, 1 )
 
 # Initialize IP330 analog input module
 #ip330Create( "ai0", 0, 2, "0to5D", "ch12-ch15", 0, 0, "burstCont-Output-Avg1", "80*3@8MHz", 0x66 )
@@ -88,7 +88,7 @@ PhaseCavityTiming_registerRecordDeviceDriver(pdbbase)
 #dbLoadRecords("db/IP231.db","CARD=ao0")
 #dbLoadRecords("db/IP330.db","CARD=ai0")
 dbLoadRecords("db/ip440.db","CARD=di0")
-#dbLoadRecords("db/ip445.db","CARD=do0")
+dbLoadRecords("db/ip445.db","CARD=do0")
 dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
 # An EDM panel for the digitizer can be
 # started with the command:
