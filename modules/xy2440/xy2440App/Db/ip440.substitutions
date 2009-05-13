@@ -13,7 +13,9 @@
 #
 #==============================================================================
 #
-
+# ZNAM - Zero value name
+# ONAM - One value name
+#
 file ip440.template
 {
    pattern

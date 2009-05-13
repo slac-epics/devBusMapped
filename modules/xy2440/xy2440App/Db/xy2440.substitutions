@@ -13,10 +13,11 @@
 #
 #==============================================================================
 #
+# ZNAM - Zero value name
+# ONAM - One value name
+#
 file xy2440.template
 {
-   # ZNAM - Zero value name
-   # ONAM - One value name
    pattern { RECORDNAME              		, PORT	,	CH , DESC           		, SCAN        , ZNAM  , ONAM }
            { "$(CARD):port$(PORT):in$(CH)"	, 0		,	0  , "Port $(PORT) In$(CH)" , ".1 second" , "Off" , "On" }
            { "$(CARD):port$(PORT):in$(CH)"	, 0		,	1  , "Port $(PORT) In$(CH)" , ".1 second" , "Off" , "On" }
