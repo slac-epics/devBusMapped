@@ -15,21 +15,30 @@
 #
 file IP231.template
 {
-  pattern { RECNAME,                  CARD  ,  CH, EGUF,  EGUL , ADEL,  MDEL, HIHI,  HIGH, LOW, LOLO, EGU   }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   0, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   1, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   2, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   3, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   4, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   5, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   6, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   7, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   8, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,   9, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  10, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  11, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  12, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  13, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  14, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
-          { "LCLS:IP_TEST:AO:C$(CH)", "ao0" ,  15, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+  # EGU		- Engineering Units
+  # EGUF	- Engineering Units Full
+  # EGUL	- Engineering Units Low
+  # ADEL	- Archive Deadband Limit
+  # MDEL	- Monitor Deadband Limit
+  # HIHI	- HiHi Alarm Limit
+  # HIGH	- High Alarm Limit
+  # LOW		- Low  Alarm Limit
+  # LOLO	- LoLo Alarm Limit
+  pattern { RECORDNAME,           CH, EGUF,  EGUL,  ADEL,  MDEL, HIHI,  HIGH, LOW, LOLO, EGU   }
+          { "$(CARD):in$(CH)",	0, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	1, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	2, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	3, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	4, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	5, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	6, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	7, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	8, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)",	9, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 10, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 11, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 12, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 13, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 14, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
+          { "$(CARD):in$(CH)", 15, 10.0,  -10.0, 0.0 ,  0.0 , 4.5 ,  4.0 , 1.0, 0.5,  Volts }
 }

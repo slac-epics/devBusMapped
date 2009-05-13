@@ -18,7 +18,7 @@ file ip440.template
 {
    pattern
    	{ RECORDNAME              		, PORT,	CH,	DESC           		  , SCAN        , ZNAM  , ONAM }
-    { "$(CARD):port$(PORT):in$(CH)"	, 0,	0,	"Port $(PORT) In$(CH)", ".1 second" , "Off" , "On" }
+    { "$(CARD):port$(PORT):in$(CH)"	, 0,	0,	"RF Digitizer Status",	".1 second" , "Bad" , "OK" }
     { "$(CARD):port$(PORT):in$(CH)"	, 0,	1,	"Port $(PORT) In$(CH)", ".1 second" , "Off" , "On" }
     { "$(CARD):port$(PORT):in$(CH)"	, 0,	2,	"Port $(PORT) In$(CH)", ".1 second" , "Off" , "On" }
     { "$(CARD):port$(PORT):in$(CH)"	, 0,	3,	"Port $(PORT) In$(CH)", ".1 second" , "Off" , "On" }

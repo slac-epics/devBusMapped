@@ -16,11 +16,11 @@
 file ip445.template
 {
    pattern { RECORDNAME                    , PORT , CH , DESC        			 , ZNAM  , ONAM }
-           { "$(CARD):port$(PORT):out$(CH)", 0    , 0  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
-           { "$(CARD):port$(PORT):out$(CH)", 0    , 1  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
-           { "$(CARD):port$(PORT):out$(CH)", 0    , 2  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
-           { "$(CARD):port$(PORT):out$(CH)", 0    , 3  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
-           { "$(CARD):port$(PORT):out$(CH)", 0    , 4  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
+           { "$(CARD):port$(PORT):out$(CH)", 0    , 0  , "RF Digitizer Resync"	 , "Off" , "On" }
+           { "$(CARD):port$(PORT):out$(CH)", 0    , 1  , "RF Attenuator Ctrl 1"  , "Off" , "On" }
+           { "$(CARD):port$(PORT):out$(CH)", 0    , 2  , "RF Attenuator Ctrl 2"  , "Off" , "On" }
+           { "$(CARD):port$(PORT):out$(CH)", 0    , 3  , "RF Attenuator Ctrl 3"  , "Off" , "On" }
+           { "$(CARD):port$(PORT):out$(CH)", 0    , 4  , "RF Attenuator Ctrl 4"  , "Off" , "On" }
            { "$(CARD):port$(PORT):out$(CH)", 0    , 5  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
            { "$(CARD):port$(PORT):out$(CH)", 0    , 6  , "Port $(PORT) Out$(CH)" , "Off" , "On" }
            { "$(CARD):port$(PORT):out$(CH)", 0    , 7  , "Port $(PORT) Out$(CH)" , "Off" , "On" }

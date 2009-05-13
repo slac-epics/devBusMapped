@@ -1,6 +1,7 @@
-record(ao, "$(RECNAME)") {
+record(ao, "$(RECORDNAME)")
+{
   field(DESC, "Analog Output")
-  field(DTYP, "IP231")
+  field(DTYP, "ACROMAG-IP231")
   field(OUT,  "@$(CARD):$(CH):DATA")
   field(PREC, "3")
   field(EGUF, "$(EGUF)")
