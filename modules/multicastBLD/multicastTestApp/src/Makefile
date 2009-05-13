@@ -18,6 +18,7 @@ multicastTest_DBD += base.dbd
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 multicastTest_SRCS += multicastTest_registerRecordDeviceDriver.cpp
 multicastTest_SRCS_DEFAULT += multicastTestMain.cpp
+multicastTest_SRCS_DEFAULT += multicastTestBld.cpp
 multicastTest_SRCS_vxWorks += -nil-
 
 #The following adds support from base/src/vxWorks
@@ -27,6 +28,7 @@ multicastTest_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 #multicastTest_LIBS_RTEMS += foo
 
 multicastTest_LIBS += $(EPICS_BASE_IOC_LIBS)
+multicastTest_LIBS += multicastBLD
 
 #===========================
 

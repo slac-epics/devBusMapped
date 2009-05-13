@@ -9,13 +9,15 @@
 
 #include "epicsThread.h"
 #include "iocsh.h"
+#include "multicastTestBld.h"
 
 int main(int argc,char *argv[])
 {
-    if(argc>=2) {    
-        iocsh(argv[1]);
-        epicsThreadSleep(.2);
-    }
-    iocsh(NULL);
+	testMulticast( argc >= 1 ? argv[1] : NULL );
+    //if(argc>=2) {    
+    //    iocsh(argv[1]);
+    //    epicsThreadSleep(.2);
+    //}
+    //iocsh(NULL);
     return(0);
 }

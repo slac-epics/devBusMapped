@@ -14,18 +14,18 @@ include $(TOP)/configure/CONFIG
 # several facilities (evr, micro, ...) for this to work.
 #BUILDFOR=_RTEMS
 
-#PROD_IOC     += foo
+#PROD_IOC     += multicastBLD
 
-#LIBRARY_IOC  += foo
+LIBRARY_IOC  += multicastBLD
 
-#multicastBLD_SRCS       = multicast.cpp
+multicastBLD_SRCS       = multicastBLDLib.cpp
 
 #DBD                = foo.dbd
 
 multicastBLDApp_DBD   = base.dbd
 #multicastBLDApp_DBD  += multicastBLDSupport.dbd
 
-#multicastBLDApp_SRCS  = multicastBLDApp_registerRecordDeviceDriver.cpp
+$multicastBLDApp_SRCS  = multicastBLDApp_registerRecordDeviceDriver.cpp
 
 multicastBLDApp_LIBS += $(EPICS_BASE_IOC_LIBS)
 
