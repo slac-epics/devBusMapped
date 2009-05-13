@@ -12,7 +12,7 @@ the 'dbLoadRecords()' commands in the startup script, and
 could differ from those in this README file if not kept uptodate.
 
 DeviceName		Description
-dig1			SLAC BPM Waveform Digitizer
+dig1			SLAC BPM Waveform VME Digitizer
 ai0				Acromag IP330AE   Analog  Input  Card 
 ao0				Acromag IP231-16E Analog  Output Card 
 di0				Acromag IP440AE   Digital Input  Card 
