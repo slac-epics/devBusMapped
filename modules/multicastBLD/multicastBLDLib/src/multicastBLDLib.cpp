@@ -341,14 +341,13 @@ int BldClientRelease(void* pVoidBldClient)
  */
 int BldClientSendRawData(void* pVoidBldClient, int iSizeData, char* pData)
 {
-	if ( pVoidBldClient == NULL )
-		return 1;
+	if ( pVoidBldClient == NULL || pData == NULL )
+		return -1;
 
 	EpicsBld::BldClientInterface* pBldClient = 
 		reinterpret_cast<EpicsBld::BldClientInterface*>(pVoidBldClient);		
-	pBldClient->sendRawData(iSizeData, pData);
-		
-	return 0;
+
+	return pBldClient->sendRawData(iSizeData, pData);
 }
 
 //int main(int argc, char** argv)
