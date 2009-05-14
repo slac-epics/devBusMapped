@@ -38,7 +38,7 @@ extern "C"
  * Bld Client basic test function
  *
  * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stop manually from keyboard
+ * address with default values. Need to be stopped manually from keyboard
  * by pressing Ctrl+C
  */
 int BldClientTestSendBasic(int iDataSeed);
@@ -50,7 +50,7 @@ int BldClientTestSendBasic(int iDataSeed);
  * to specify the IP interface for sending multicast.
  *
  * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stop manually from keyboard
+ * address with default values. Need to be stopped manually from keyboard
  * by pressing Ctrl+C
  */
 int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp=0);

@@ -170,7 +170,7 @@ class Client : public Port
 class BldClientInterface
 {
 public:
-	virtual void sendRawData(int iSizeData, char* pData) = 0;	
+	virtual int sendRawData(int iSizeData, char* pData) = 0;	
 	
 	virtual ~BldClientInterface() {}
 };
@@ -204,7 +204,7 @@ public:
 		unsigned char ucTTL = 32, unsigned int uInteraceIp = 0);
 	virtual ~BldClientTest();
 	
-	void sendRawData(int iSizeData, char* pData);
+	virtual int sendRawData(int iSizeData, char* pData);
 private:
 	int _initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
 		unsigned int uInterfaceIp);
@@ -796,10 +796,10 @@ BldClientTest::~BldClientTest()
 	if ( _pSocket != NULL) delete _pSocket;
 }
 
-void BldClientTest::sendRawData(int iSizeData, char* pData)
+int BldClientTest::sendRawData(int iSizeData, char* pData)
 {
 	Ins insDst( _uAddr, _uPort );
-	_pSocket->send(NULL, pData, iSizeData, insDst);
+	return _pSocket->send(NULL, pData, iSizeData, insDst);
 }
 
 } // namespace EpicsBld
