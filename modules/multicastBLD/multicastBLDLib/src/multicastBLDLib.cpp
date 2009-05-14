@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -17,9 +18,10 @@ namespace EpicsBld
 
 namespace ConfigurationMulticast
 {
-	static const unsigned uTestAddr = 239<<24 | 255<<16 | 0<<8 | 1; // multicast
-	static const unsigned uTestPort = 50000;
-	static const unsigned char ucTTL = 2;
+	static const unsigned int uDefaultAddr = 239<<24 | 255<<16 | 0<<8 | 1; /// multicast address
+	static const unsigned int uDefaultPort = 50000;
+	static const unsigned int uDefaultMaxDataSize = 256; /// in bytes
+	static const unsigned char ucDefaultTTL = 32; /// minimum: 1 + (# of routers in the middle)
 };
 
 /**
@@ -143,7 +145,7 @@ class Client : public Port
     /*
 	 * Multicast functions
 	 */
-    void use(unsigned interface); 
+    void multicastSetInterface(unsigned interface); 
 	int multicastSetTTL(unsigned char ucTTL);
 		 
   private:
@@ -163,46 +165,202 @@ class Client : public Port
 };
 
 /**
- * Bld Multicast Client
+ * Abastract Interface of Bld Multicast Client 
  */
-class ClientTest {
+class BldClientInterface
+{
 public:
-	ClientTest(unsigned uAddr, unsigned uPort, unsigned char ucTTL = 1,
-		char* sInteraceIp = NULL);
-	~ClientTest();
+	virtual void sendRawData(int iSizeData, char* pData) = 0;	
 	
-	void send(int iSeed = 0);
-private:
-	enum {_Nwords=16};
-	unsigned _data[_Nwords];
+	virtual ~BldClientInterface() {}
+};
 
-	Client   _outlet; // socket
-	Ins      _dst;    // port and address
+/**
+ * Factory class of Bld Multicast Client 
+ */
+class BldClientFactory
+{
+public:
+	virtual BldClientInterface* getBldClient(unsigned uAddr, 
+		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
+		char* sInteraceIp = NULL);
+		
+	virtual BldClientInterface* getBldClient(unsigned uAddr, 
+		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
+		unsigned int uInteraceIp = 0);
+		
+	virtual ~BldClientFactory() {}
+};
+
+/**
+ * Bld Multicast Client Test class
+ */
+class BldClientTest : public BldClientInterface
+{
+public:
+	BldClientTest(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
+		unsigned char ucTTL = 32, char* sInteraceIp = NULL);
+	BldClientTest(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
+		unsigned char ucTTL = 32, unsigned int uInteraceIp = 0);
+	virtual ~BldClientTest();
+	
+	void sendRawData(int iSizeData, char* pData);
+private:
+	int _initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
+		unsigned int uInterfaceIp);
+
+	Client*	_pSocket; // socket
+	unsigned _uAddr, _uPort;
 };
 
 } // namespace EpicsBld
 
-extern "C" int testEpicsBld(char* sInterfaceIp);
 
-int testEpicsBld(char* sInterfaceIp)
-{
-	using namespace EpicsBld;
-	using namespace ConfigurationMulticast;
-	ClientTest bldClient(uTestAddr, uTestPort, ucTTL, sInterfaceIp);
+extern "C" 
+{	
+// forward declaration
+int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp);
 
-	printf( "Beginning Multicast Client Testing. Press Any Key to Exit...\n" );
 	
-	int iSendSeed = 0;
+/**
+ * Bld Client basic test function
+ *
+ * Will continuously send out the multicast packets to a default
+ * address with default values. Need to be stop manually from keyboard
+ * by pressing Ctrl+C
+ */
+int BldClientTestSendBasic(int iDataSeed)
+{	
+	return BldClientTestSendInterface(iDataSeed, NULL);
+}
+
+/**
+ * Bld Client test function with IP interface selection
+ *
+ * Similar to BldClientTestSendBasic(), but with the argument (sInterfaceIp)
+ * to specify the IP interface for sending multicast.
+ *
+ * Will continuously send out the multicast packets to a default
+ * address with default values. Need to be stop manually from keyboard
+ * by pressing Ctrl+C
+ */
+int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp)
+{
+	const int iSleepInterval = 3;
+	
+	EpicsBld::BldClientFactory bldClientFactory;
+	
+	using namespace EpicsBld::ConfigurationMulticast;
+	EpicsBld::BldClientInterface* pBldClient = bldClientFactory.getBldClient(uDefaultAddr, 
+		uDefaultPort, uDefaultMaxDataSize, ucDefaultTTL, sInterfaceIp);
+
+	printf( "Beginning Multicast Client Testing. Press Ctrl+C to Exit...\n" );
+	
+	unsigned int uIntDataSize = (uDefaultMaxDataSize/sizeof(int));
+	int* liData = new int[uIntDataSize];
+	int iTestValue = iDataSeed * 1000;
+	
 	while ( 1 )  
 	{
-		bldClient.send(++iSendSeed);
-		sleep(5);	
-	}
+		for (unsigned int uIndex=0; uIndex<uIntDataSize; uIndex++)
+			liData[uIndex] = iTestValue;
+			
+		printf("Bld send to %x port %d Value %d\n", uDefaultAddr, uDefaultPort, iTestValue);
+		
+		pBldClient->sendRawData(uIntDataSize*sizeof(int), 
+			reinterpret_cast<char*>(liData));
+		iTestValue++;
+		sleep(iSleepInterval);
+		// Waiting for keyboard interrupt to break the infinite loop
+	}	
 	
-	printf("\r\n"); // move the cursor to the beginning of line
+	delete[] liData;
+	delete pBldClient;
 	
 	return 0;
 }
+
+/* 
+ * The following functions provide C wrappers for accesing EpicsBld::BldClientInterface
+ * and EpicsBld::BldClientFactory
+ */
+
+/**
+ * Init function: Use EpicsBld::BldClientFactory to construct the BldClient
+ * and save the pointer in (*ppVoidBldClient)
+ */ 
+int BldClientInitByInterfaceName(unsigned uAddr, unsigned uPort, 
+	unsigned int uMaxDataSize, unsigned char ucTTL, char* sInterfaceIp, 
+	void** ppVoidBldClient)
+{
+	if ( ppVoidBldClient == NULL )
+		return 1;
+	
+	EpicsBld::BldClientFactory bldClientFactory;
+	EpicsBld::BldClientInterface* pBldClient = bldClientFactory.getBldClient(
+		uAddr, uPort, uMaxDataSize, ucTTL, sInterfaceIp);
+		
+	*ppVoidBldClient = reinterpret_cast<void*>(pBldClient);
+	
+	return 0;
+}
+
+int BldClientInitByInterfaceAddress(unsigned uAddr, unsigned uPort, 
+	unsigned int uMaxDataSize, unsigned char ucTTL, unsigned int uInterfaceIp, 
+	void** ppVoidBldClient)
+{
+	if ( ppVoidBldClient == NULL )
+		return 1;
+	
+	EpicsBld::BldClientFactory bldClientFactory;
+	EpicsBld::BldClientInterface* pBldClient = bldClientFactory.getBldClient(
+		uAddr, uPort, uMaxDataSize, ucTTL, uInterfaceIp);
+		
+	*ppVoidBldClient = reinterpret_cast<void*>(pBldClient);
+	
+	return 0;
+}
+
+/**
+ * Release function: Call C++ delete operator to delete the BldClient
+ */
+int BldClientRelease(void* pVoidBldClient)
+{
+	if ( pVoidBldClient == NULL )
+		return 1;
+		
+	EpicsBld::BldClientInterface* pBldClient = 
+		reinterpret_cast<EpicsBld::BldClientInterface*>(pVoidBldClient);
+	delete pBldClient;
+		
+	return 0;
+}
+
+/**
+ * Call the Send function defined in EpicsBld::BldClientInterface 
+ */
+int BldClientSendRawData(void* pVoidBldClient, int iSizeData, char* pData)
+{
+	if ( pVoidBldClient == NULL )
+		return 1;
+
+	EpicsBld::BldClientInterface* pBldClient = 
+		reinterpret_cast<EpicsBld::BldClientInterface*>(pVoidBldClient);		
+	pBldClient->sendRawData(iSizeData, pData);
+		
+	return 0;
+}
+
+//int main(int argc, char** argv)
+//{
+//	printf( "argc =%d\n", argc );
+//	int iDataSeed = ( argc >= 2 ? atoi(argv[1]) : 1 );
+//	char* sInterfaceIp = ( argc >= 3 ? argv[2] : NULL );
+//	
+//	return BldClientTestSendInterface( iDataSeed, sInterfaceIp );
+//}
+
+} // extern "C" 
 
 /**
  * class member definitions
@@ -479,7 +637,7 @@ Client::~Client() {
 ** --
 */
 
-void Client::use(unsigned interface)
+void Client::multicastSetInterface(unsigned interface)
 {
   in_addr address;
   address.s_addr = htonl(interface);
@@ -564,14 +722,6 @@ int Client::send(char*         datagram,
   return (length == - 1) ? errno : 0;
 }
 
-/*
-** ++
-**
-**
-**
-** --
-*/
-
 #ifdef ODF_LITTLE_ENDIAN
 void  Client::_swap(const iovec* iov, unsigned msgcount, iovec* iov_swap) {
   unsigned* dst = (unsigned*)_swap_buffer;  
@@ -590,33 +740,66 @@ void  Client::_swap(const iovec* iov, unsigned msgcount, iovec* iov_swap) {
 #endif
 
 /**
- * class ClientTest
+ * class BldClientFactory
  */
-ClientTest::ClientTest(unsigned uAddr, unsigned uPort, unsigned char ucTTL,
-	char* sInterfaceIp) : _outlet(0,_Nwords*sizeof(unsigned)), _dst(uAddr,uPort)
+BldClientInterface* BldClientFactory::getBldClient(unsigned uAddr, 
+		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL, 
+		char* sInteraceIp)
 {
-	_outlet.multicastSetTTL(ucTTL);
+	return new BldClientTest(uAddr, uPort, uMaxDataSize, ucTTL, sInteraceIp );
+}
+
+BldClientInterface* BldClientFactory::getBldClient(unsigned uAddr, 
+		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL, 
+		unsigned int uInterfaceIp)
+{
+	return new BldClientTest(uAddr, uPort, uMaxDataSize, ucTTL, uInterfaceIp );
+}
+
+/**
+ * class BldClientTest
+ */
+BldClientTest::BldClientTest(unsigned uAddr, unsigned uPort, 
+	unsigned int uMaxDataSize, unsigned char ucTTL, char* sInterfaceIp) : 
+	_pSocket(NULL), _uAddr(uAddr), _uPort(uPort)
+{
+	unsigned int uInterfaceIp = ( (sInterfaceIp == NULL)?
+		0 : ntohl(inet_addr(sInterfaceIp)) );
+	_initClient(uMaxDataSize, ucTTL, uInterfaceIp);	
+}
+
+BldClientTest::BldClientTest(unsigned uAddr, unsigned uPort, 
+	unsigned int uMaxDataSize, unsigned char ucTTL, unsigned int uInterfaceIp) : 
+	_pSocket(NULL), _uAddr(uAddr), _uPort(uPort)
+{	
+	_initClient(uMaxDataSize, ucTTL, uInterfaceIp );
+}
+
+int BldClientTest::_initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
+	unsigned int uInterfaceIp)
+{
+	if ( _pSocket != NULL) delete _pSocket;	
+	
+	_pSocket = new Client(0, uMaxDataSize);
+	_pSocket->multicastSetTTL(ucTTL);
   
-	if ( sInterfaceIp != NULL) 
+	if ( uInterfaceIp != 0) 
 	{
-		printf( "multicast interface IP: %s\n", sInterfaceIp );
-		_outlet.use( ntohl(inet_addr(sInterfaceIp)) );
-	}  
+		printf( "multicast interface IP: %ud\n", uInterfaceIp );
+		_pSocket->multicastSetInterface(uInterfaceIp);
+	}  	
+	return 0;
 }
 
-ClientTest::~ClientTest() 
+BldClientTest::~BldClientTest() 
 {
+	if ( _pSocket != NULL) delete _pSocket;
 }
 
-void ClientTest::send(int iSeed)
+void BldClientTest::sendRawData(int iSizeData, char* pData)
 {
-  for (int i=0;i<_Nwords;i++) _data[i]=  iSeed*100+i;
-  printf("\n\rcalling send uAddr %x port %d seed %d\n",
-	_dst.address(),_dst.portId(), iSeed);
-  _outlet.send(NULL,
-	       reinterpret_cast<char*>(&_data), 
-	       _Nwords * sizeof(unsigned), 
-	       _dst);
+	Ins insDst( _uAddr, _uPort );
+	_pSocket->send(NULL, pData, iSizeData, insDst);
 }
 
 } // namespace EpicsBld

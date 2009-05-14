@@ -1,1 +1,1 @@
-extern "C" int testMulticast( char* sInterfaceIp);
+extern "C" int testBldClient(int iTestType, char* sInterfaceIp);

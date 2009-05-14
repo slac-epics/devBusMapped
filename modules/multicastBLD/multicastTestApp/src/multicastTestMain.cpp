@@ -13,7 +13,10 @@
 
 int main(int argc,char *argv[])
 {
-	testMulticast( argc >= 1 ? argv[1] : NULL );
+	int iTestType = ( argc >= 2 ? atoi(argv[1]) : 0 );
+	char* sInterfaceIp = ( argc >= 3 ? argv[2] : NULL );
+	
+	testBldClient( iTestType, sInterfaceIp );
     //if(argc>=2) {    
     //    iocsh(argv[1]);
     //    epicsThreadSleep(.2);
