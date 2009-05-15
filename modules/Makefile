@@ -40,7 +40,7 @@ DIRS+=epm2000
 DIRS+=ssi
 DIRS+=plcAdmin
 DIRS+=devBusMapped
-DIRS+=vmeDigitizer
+DIRS+=bpmDigitizer
 
 all:
 

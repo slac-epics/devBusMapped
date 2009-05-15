@@ -2,6 +2,6 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 DIRS += configure
-DIRS += vmeDigitizerLib
+DIRS += bpmDigitizerLib
 DIRS += digiTestApp
 include $(TOP)/configure/RULES_TOP
