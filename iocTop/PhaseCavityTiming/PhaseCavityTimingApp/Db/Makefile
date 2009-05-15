@@ -11,14 +11,14 @@ include $(TOP)/configure/CONFIG
 # Create and install (or just install) into <top>/db
 # databases, templates, substitutions like this
 DB += vmeDigiApp.db
-#DB += IP231.template
-#DB += IP330.template
+DB += IP231.template
+DB += IP330.template
 DB += ip440.template
 DB += ip445.template
 
 # Generate db files from substitutions
-#DB += IP231.db
-#DB += IP330.db
+DB += IP231.db
+DB += IP330.db
 DB += ip440.db
 DB += ip445.db
 

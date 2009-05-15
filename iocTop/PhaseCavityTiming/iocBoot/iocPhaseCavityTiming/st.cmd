@@ -66,9 +66,34 @@ xy2440Create( "di0", 0, 0, "STANDARD", "LEVEL", 0x0, 0x80, 0x0, 0x00 )
 # xy2445Create( <name>, <card>, <slot> )
 xy2445Create( "do0", 0, 1 )
 
-# Initialize IP330 analog input module
-#ip330Create( "ai0", 0, 2, "0to5D", "ch12-ch15", 0, 0, "burstCont-Output-Avg1", "80*3@8MHz", 0x66 )
-#ip330StartConvertByName( "ai0" )
+#	Initialize IP330 analog input module
+#	See the Acromag IP330 User's manual in ip330/documentation
+#	for details on scan modes, triggers, timer, and other options.
+#	ip330Create(
+#		char	*	cardname,	Unique Identifier "ip330-1"
+#		UINT16		carrier,	Ipac Driver carrier card number
+#		UINT16		slot,		Slot number on IP carrier
+#		char	*	a2d_range,	One of:	"-5to5D" "-10to10D" "0to5D" "0to10D"
+#										"-5to5S" "-10to10S" "0to5S" "0to10S"
+#		char	*	channels,	Format is "ch%d-ch%d", Ex: "ch0-ch15" or "ch21-ch31"
+#								Available range is 0 to 15/31 depending on Differential or
+#								Single inputs.
+#		UINT32		gainL,		The lower two bits is gain for channel0, then channel 1 ... 15
+#		UINT32		gainH,		The lower two bits is gain for channel16, then channel 17 ... 31
+#		char	*	scanmode,	Format is "%s-%s-%s", <mode>-<trigger>-Avg<avgCount>
+#								mode can be "uniformCont", "uniformSingle", "burstCont",
+#									"burstSingle", or "cvtOnExt"
+#								trigger can be "Input" or "Output"
+#									If mode is "cvtOnExt", trigger must be "Input"
+#								avgCount range is 1 to 256 and specifies how many samples to
+#									average over
+#								For low frequency applications without exacting timing
+#									requirements, a scanmode of "burstCont-Output-Avg1" is typical.
+#		char	*	timer,		Format is "x*y@8MHz" where x must be [64,255], y must be [1,65535]
+#								The timing interval can be calculated from (x*y)/8 in microseconds.
+#		UINT8		vector )	Interrupt vector should be 0x66
+ip330Create( "ai0", 0, 2, "-10to10D", "ch0-ch8", 0, 0, "burstCont-Output-Avg1", "80*3@8MHz", 0x66 )
+ip330StartConvertByName( "ai0" )
 
 # Initialize IP231 analog output module
 # ip231Create( <name>, <card>, <slot>, <dacmode> )
@@ -76,7 +101,7 @@ xy2445Create( "do0", 0, 1 )
 # In transparent mode, outputs are updated when written
 # In simultaneous mode, multiple output values can be setup,
 # and all outputs update when ip231SimulTrigger(<cardNo>) is called
-#ip231Create( "ao0", 0, 3, "transparent" )
+ip231Create( "ao0", 0, 3, "transparent" )
 
 # Load EPICS database definition
 dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
@@ -85,8 +110,8 @@ dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
 PhaseCavityTiming_registerRecordDeviceDriver(pdbbase) 
 
 ## Load EPICS records
-#dbLoadRecords("db/IP231.db","CARD=ao0")
-#dbLoadRecords("db/IP330.db","CARD=ai0")
+dbLoadRecords("db/IP231.db","CARD=ao0")
+dbLoadRecords("db/IP330.db","CARD=ai0")
 dbLoadRecords("db/ip440.db","CARD=di0")
 dbLoadRecords("db/ip445.db","CARD=do0")
 dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
