@@ -1,19 +1,5 @@
 namespace EpicsBld
-{
-	
-namespace ConfigurationMulticast
-{
-	
-extern "C"
-{
-	extern const unsigned int uDefaultAddr; /// multicast address
-	extern const unsigned int uDefaultPort;
-	extern const unsigned int uDefaultMaxDataSize; /// in bytes
-	extern const unsigned char ucDefaultTTL; /// minimum: 1 + (# of routers in the middle)
-}
-
-};
-
+{	
 /**
  * Abastract Interface of Bld Multicast Client 
  * 
@@ -86,35 +72,6 @@ private:
 
 extern "C"
 {
-
-/**
- * Bld Client basic test function
- *
- * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stopped manually from keyboard
- * by pressing Ctrl+C
- *
- * This fucntion is only used for quick testing of Bld Client, such as 
- * running from CExp Command Line.
- */
-int BldClientTestSendBasic(int iDataSeed);
-
-/**
- * Bld Client test function with IP interface selection
- *
- * Similar to BldClientTestSendBasic(), but with the argument (sInterfaceIp)
- * to specify the IP interface for sending multicast.
- *
- * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stopped manually from keyboard
- * by pressing Ctrl+C
- *
- * This fucntion is only used for quick testing of Bld Client, such as 
- * running from CExp Command Line.
- */
-int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp=0);
-
-
 /* 
  * The following functions provide C wrappers for accesing EpicsBld::BldClientInterface
  * and EpicsBld::BldClientFactory

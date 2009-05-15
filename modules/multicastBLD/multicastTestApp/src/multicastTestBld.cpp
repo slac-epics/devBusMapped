@@ -13,24 +13,12 @@ int testBldAPI_CPP(char* sInterfaceIp);
 int testBldClient(int iTestType, char* sInterfaceIp)
 {	
 	if ( iTestType == 0 )
-	{
-		printf( "Basic mutlicast test. Press Ctrl+C to break this test...\n" );
-		BldClientTestSendBasic(1);
-	}
-	
-	if ( iTestType == 1 )
-	{
-		printf( "Basic test with IP interface selection. Press Ctrl+C to break this test...\n" );
-		BldClientTestSendInterface(1, sInterfaceIp);	
-	}
-
-	if ( iTestType == 2 )
 	{	
 		printf( "Progarmming interface (CPP) test. Press Ctrl+C to break this test...\n" );
 		testBldAPI_CPP(sInterfaceIp);
 	}
 
-	if ( iTestType == 3 )
+	if ( iTestType == 1 )
 	{
 		printf( "Progarmming interface (C) test. Press Ctrl+C to break this test...\n" );	
 		testBldAPI_C(sInterfaceIp);
@@ -62,11 +50,10 @@ int testBldAPI_CPP(char* sInterfaceIp)
 
 int testBldAPI_C(char* sInterfaceIp)
 {
-	/// Use default values for testing
-	const unsigned int uAddr = EpicsBld::ConfigurationMulticast::uDefaultAddr; 
-	const unsigned int uPort = EpicsBld::ConfigurationMulticast::uDefaultPort;
-	const unsigned int uMaxDataSize = EpicsBld::ConfigurationMulticast::uDefaultMaxDataSize; 
-	const unsigned char ucTTL = EpicsBld::ConfigurationMulticast::ucDefaultTTL;	
+	const unsigned int uAddr = 239<<24 | 255<<16 | 0<<8 | 1; // multicast address
+	const unsigned int uPort = 50000;
+	const unsigned int uMaxDataSize = 256; // in bytes
+	const unsigned char ucTTL = 32; /// minimum: 1 + (# of routers in the middle)
 	
 	void* pVoidBldClient = NULL;
 	BldClientInitByInterfaceName(uAddr, uPort, uMaxDataSize, ucTTL, sInterfaceIp, 

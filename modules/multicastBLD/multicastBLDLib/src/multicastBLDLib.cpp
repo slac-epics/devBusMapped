@@ -16,17 +16,6 @@
 namespace EpicsBld
 {
 
-/*
- * Common Test Configuration for Bld Server and Client
- */
-namespace ConfigurationMulticast
-{
-	const unsigned int uDefaultAddr = 239<<24 | 255<<16 | 0<<8 | 1; /// multicast address
-	const unsigned int uDefaultPort = 50000;
-	const unsigned int uDefaultMaxDataSize = 256; /// in bytes
-	const unsigned char ucDefaultTTL = 32; /// minimum: 1 + (# of routers in the middle)
-};
-
 /**
  * class Ins
  *
@@ -168,16 +157,16 @@ class Client : public Port
 };
 
 /**
- * Bld Multicast Client Test class
+ * A preliminary Bld Multicast Client class
  */
-class BldClientTest : public BldClientInterface
+class BldClientBasic : public BldClientInterface
 {
 public:
-	BldClientTest(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
+	BldClientBasic(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
 		unsigned char ucTTL = 32, char* sInteraceIp = NULL);
-	BldClientTest(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
+	BldClientBasic(unsigned uAddr, unsigned uPort, unsigned int uMaxDataSize,
 		unsigned char ucTTL = 32, unsigned int uInteraceIp = 0);
-	virtual ~BldClientTest();
+	virtual ~BldClientBasic();
 	
 	virtual int sendRawData(int iSizeData, const char* pData);
 private:
@@ -193,72 +182,6 @@ private:
 
 extern "C" 
 {	
-// forward declaration
-int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp);
-
-	
-/**
- * Bld Client basic test function
- *
- * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stop manually from keyboard
- * by pressing Ctrl+C
- *
- * This fucntion is only used for quick testing of Bld Client, such as 
- * running from CExp Command Line.
- */
-int BldClientTestSendBasic(int iDataSeed)
-{	
-	return BldClientTestSendInterface(iDataSeed, NULL);
-}
-
-/**
- * Bld Client test function with IP interface selection
- *
- * Similar to BldClientTestSendBasic(), but with the argument (sInterfaceIp)
- * to specify the IP interface for sending multicast.
- *
- * Will continuously send out the multicast packets to a default
- * address with default values. Need to be stop manually from keyboard
- * by pressing Ctrl+C
- *
- * This fucntion is only used for quick testing of Bld Client, such as 
- * running from CExp Command Line.
- */
-int BldClientTestSendInterface(int iDataSeed, char* sInterfaceIp)
-{
-	const int iSleepInterval = 3;
-		
-	using namespace EpicsBld::ConfigurationMulticast;
-	EpicsBld::BldClientInterface* pBldClient = 
-		EpicsBld::BldClientFactory::createBldClient(uDefaultAddr, uDefaultPort, 
-			uDefaultMaxDataSize, ucDefaultTTL, sInterfaceIp);
-
-	printf( "Beginning Multicast Client Testing. Press Ctrl+C to Exit...\n" );
-	
-	unsigned int uIntDataSize = (uDefaultMaxDataSize/sizeof(int));
-	int* liData = new int[uIntDataSize];
-	int iTestValue = iDataSeed * 1000;
-	
-	while ( 1 )  
-	{
-		for (unsigned int uIndex=0; uIndex<uIntDataSize; uIndex++)
-			liData[uIndex] = iTestValue;
-			
-		printf("Bld send to %x port %d Value %d\n", uDefaultAddr, uDefaultPort, iTestValue);
-		
-		pBldClient->sendRawData(uIntDataSize*sizeof(int), 
-			reinterpret_cast<char*>(liData));
-		iTestValue++;
-		sleep(iSleepInterval);
-		// Waiting for keyboard interrupt to break the infinite loop
-	}	
-	
-	delete[] liData;
-	delete pBldClient;
-	
-	return 0;
-}
 
 /* 
  * The following functions provide C wrappers for accesing EpicsBld::BldClientInterface
@@ -716,20 +639,20 @@ BldClientInterface* BldClientFactory::createBldClient(unsigned uAddr,
 		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL, 
 		char* sInteraceIp)
 {
-	return new BldClientTest(uAddr, uPort, uMaxDataSize, ucTTL, sInteraceIp );
+	return new BldClientBasic(uAddr, uPort, uMaxDataSize, ucTTL, sInteraceIp );
 }
 
 BldClientInterface* BldClientFactory::createBldClient(unsigned uAddr, 
 		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL, 
 		unsigned int uInterfaceIp)
 {
-	return new BldClientTest(uAddr, uPort, uMaxDataSize, ucTTL, uInterfaceIp );
+	return new BldClientBasic(uAddr, uPort, uMaxDataSize, ucTTL, uInterfaceIp );
 }
 
 /**
- * class BldClientTest
+ * class BldClientBasic
  */
-BldClientTest::BldClientTest(unsigned uAddr, unsigned uPort, 
+BldClientBasic::BldClientBasic(unsigned uAddr, unsigned uPort, 
 	unsigned int uMaxDataSize, unsigned char ucTTL, char* sInterfaceIp) : 
 	_pSocket(NULL), _uAddr(uAddr), _uPort(uPort)
 {
@@ -738,14 +661,14 @@ BldClientTest::BldClientTest(unsigned uAddr, unsigned uPort,
 	_initClient(uMaxDataSize, ucTTL, uInterfaceIp);	
 }
 
-BldClientTest::BldClientTest(unsigned uAddr, unsigned uPort, 
+BldClientBasic::BldClientBasic(unsigned uAddr, unsigned uPort, 
 	unsigned int uMaxDataSize, unsigned char ucTTL, unsigned int uInterfaceIp) : 
 	_pSocket(NULL), _uAddr(uAddr), _uPort(uPort)
 {	
 	_initClient(uMaxDataSize, ucTTL, uInterfaceIp );
 }
 
-int BldClientTest::_initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
+int BldClientBasic::_initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
 	unsigned int uInterfaceIp)
 {
 	if ( _pSocket != NULL) delete _pSocket;	
@@ -761,12 +684,12 @@ int BldClientTest::_initClient( unsigned int uMaxDataSize, unsigned char ucTTL,
 	return 0;
 }
 
-BldClientTest::~BldClientTest() 
+BldClientBasic::~BldClientBasic() 
 {
 	if ( _pSocket != NULL) delete _pSocket;
 }
 
-int BldClientTest::sendRawData(int iSizeData, const char* pData)
+int BldClientBasic::sendRawData(int iSizeData, const char* pData)
 {
 	Ins insDst( _uAddr, _uPort );
 	return _pSocket->send(NULL, pData, iSizeData, insDst);
