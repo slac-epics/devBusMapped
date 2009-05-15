@@ -227,8 +227,8 @@ static long report(int level)
 	    if (brdptr == NULL)
 		printf("    Oms Vme58 motor card #%d not found.\n", card);
 	    else
-		printf("    Oms Vme58 motor card #%d @ 0x%X, id: %s \n", card,
-		       (epicsUInt32) brdptr->localaddr,
+		printf("    Oms Vme58 motor card #%d @ %p, id: %s \n", card,
+		       brdptr->localaddr,
 		       brdptr->ident);
 	}
     }
@@ -853,7 +853,7 @@ int oms58Setup(int num_cards,	/* maximum number of cards in rack */
 	oms58_num_cards = num_cards;
 
     /* Check range and boundary(4K) on base address */
-    if (addrs > (void *) 0xF000 || ((epicsUInt32) addrs & 0xFFF))
+    if (addrs > (void *) 0xF000 || ((unsigned long) addrs & 0xFFF))
     {
 	Debug(1, "omsSetup: invalid base address 0x%X\n", (epicsUInt32) addrs);
 	oms_addrs = (char *) OMS_NUM_ADDRS;

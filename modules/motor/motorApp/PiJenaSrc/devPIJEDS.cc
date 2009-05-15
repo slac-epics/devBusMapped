@@ -107,7 +107,7 @@ static struct board_stat **PIJEDS_cards;
 static long PIJEDS_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

@@ -111,7 +111,7 @@ static struct board_stat **SC800_cards;
 static long SC800_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

@@ -201,8 +201,8 @@ static long report(int level)
             if (brdptr == NULL)
                 printf("    Oms MAXv motor card #%d not found.\n", card);
             else
-                printf("    Oms MAXv motor card #%d @ 0x%X, id: %s \n", card,
-                       (epicsUInt32) motor_state[card]->localaddr,
+                printf("    Oms MAXv motor card #%d @ %p, id: %s \n", card,
+                       motor_state[card]->localaddr,
                        motor_state[card]->ident);
         }
     }

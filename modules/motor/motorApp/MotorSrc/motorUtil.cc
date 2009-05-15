@@ -248,8 +248,8 @@ static void stopAll(chid callback_chid, char *callback_value)
     short val = 1, release_val = 0;
     
     if (callback_chid != chid_allstop)
-        errlogPrintf("callback_chid = %08x, chid_allstop = %08x\n",
-               (unsigned int) callback_chid, (unsigned int) chid_allstop);
+        errlogPrintf("callback_chid = %p, chid_allstop = %p\n",
+               callback_chid, chid_allstop);
     
     if (strcmp(callback_value, "release") != 0)
     {
@@ -370,17 +370,17 @@ void printChIDlist()
 
     for (itera=0; itera < numMotors; itera++)
     {
-        errlogPrintf("i = %i,\tname = %s\tchid_dmov = %08x\tchid_stop = \
-               %08x\tin_motion = %i\tindex = %i\n", itera,
+        errlogPrintf("i = %i,\tname = %s\tchid_dmov = %p\tchid_stop = \
+               %p\tin_motion = %i\tindex = %i\n", itera,
                motorArray[itera].name,
-               (unsigned int) motorArray[itera].chid_dmov,
-               (unsigned int) motorArray[itera].chid_stop, 
+               motorArray[itera].chid_dmov,
+               motorArray[itera].chid_stop, 
                motorArray[itera].in_motion, motorArray[itera].index);
     }
     
-    errlogPrintf("chid_allstop = %08x\n", (unsigned int) chid_allstop);
-    errlogPrintf("chid_alldone = %08x\n", (unsigned int) chid_alldone);
-    errlogPrintf("chid_moving = %08x\n", (unsigned int) chid_moving);
+    errlogPrintf("chid_allstop = %p\n", chid_allstop);
+    errlogPrintf("chid_alldone = %p\n", chid_alldone);
+    errlogPrintf("chid_moving = %p\n", chid_moving);
 }
 
 

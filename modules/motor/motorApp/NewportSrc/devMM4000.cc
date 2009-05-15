@@ -115,7 +115,7 @@ static struct board_stat **MM4000_cards;
 STATIC long MM4000_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {

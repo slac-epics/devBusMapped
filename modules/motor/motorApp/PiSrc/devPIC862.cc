@@ -86,7 +86,7 @@ static struct board_stat **PIC862_cards;
 static long PIC862_init(void *arg)
 {
     long rtnval;
-    int after = (int) arg;
+    long after = (long) arg;
 
     if (after == 0)
     {
