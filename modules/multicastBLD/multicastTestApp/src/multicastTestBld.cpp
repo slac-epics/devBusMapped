@@ -41,39 +41,20 @@ int testBldClient(int iTestType, char* sInterfaceIp)
 
 int testBldAPI_CPP(char* sInterfaceIp)
 {
-	const int iSleepInterval = 3; // seconds
 	const unsigned int uAddr = 239<<24 | 255<<16 | 0<<8 | 1; // multicast address
 	const unsigned int uPort = 50000;
 	const unsigned int uMaxDataSize = 256; // in bytes
 	const unsigned char ucTTL = 32; /// minimum: 1 + (# of routers in the middle)
 	
-	EpicsBld::BldClientFactory bldClientFactory;
+	const char lcData[] = "MULTICAST BLD TEST"; // The sizeof(lcData) < uMaxDataSize
 	
-	EpicsBld::BldClientInterface* pBldClient = bldClientFactory.getBldClient(uAddr, 
-		uPort, uMaxDataSize, ucTTL, sInterfaceIp);
+	EpicsBld::BldClientInterface* pBldClient = 
+		EpicsBld::BldClientFactory::createBldClient(uAddr, uPort, uMaxDataSize, 
+			ucTTL, sInterfaceIp);			
 
-	printf( "Beginning Multicast Client Testing. Press Ctrl+C to Exit...\n" );
-	
-	// Allocate data buffer
-	unsigned int uIntDataSize = (uMaxDataSize/sizeof(int));
-	int* liData = new int[uIntDataSize];
-	int iTestValue = 1000;
-	
-	while ( 1 )  
-	{
-		for (unsigned int uIndex=0; uIndex<uIntDataSize; uIndex++)
-			liData[uIndex] = iTestValue;
-			
-		printf("Bld send to %x port %d Value %d\n", uAddr, uPort, iTestValue);
+	printf("Bld send to %x port %d Data String %s\n", uAddr, uPort, lcData);
+	pBldClient->sendRawData(sizeof(lcData), lcData);
 		
-		pBldClient->sendRawData(uIntDataSize*sizeof(int), 
-			reinterpret_cast<char*>(liData));
-		iTestValue++;
-		sleep(iSleepInterval);
-		// Waiting for keyboard interrupt to break the infinite loop
-	}	
-	
-	delete[] liData;
 	delete pBldClient;
 	
 	return 0;
@@ -81,11 +62,11 @@ int testBldAPI_CPP(char* sInterfaceIp)
 
 int testBldAPI_C(char* sInterfaceIp)
 {
-	const int iSleepInterval = 3; // seconds
-	const unsigned int uAddr = 239<<24 | 255<<16 | 0<<8 | 1; // multicast address
-	const unsigned int uPort = 50000;
-	const unsigned int uMaxDataSize = 256; // in bytes
-	const unsigned char ucTTL = 32; /// minimum: 1 + (# of routers in the middle)
+	/// Use default values for testing
+	const unsigned int uAddr = EpicsBld::ConfigurationMulticast::uDefaultAddr; 
+	const unsigned int uPort = EpicsBld::ConfigurationMulticast::uDefaultPort;
+	const unsigned int uMaxDataSize = EpicsBld::ConfigurationMulticast::uDefaultMaxDataSize; 
+	const unsigned char ucTTL = EpicsBld::ConfigurationMulticast::ucDefaultTTL;	
 	
 	void* pVoidBldClient = NULL;
 	BldClientInitByInterfaceName(uAddr, uPort, uMaxDataSize, ucTTL, sInterfaceIp, 
@@ -100,16 +81,17 @@ int testBldAPI_C(char* sInterfaceIp)
 	int* liData = (int*) malloc(uIntDataSize * sizeof(int));
 	int iTestValue = 1000;
 	
+	const int iSleepInterval = 3; // sleeps some seconds after sending each Bld data
 	while ( 1 )  
 	{
 		for (unsigned int uIndex=0; uIndex<uIntDataSize; uIndex++)
 			liData[uIndex] = iTestValue;
 			
-		printf("Bld send to %x port %d Value %d\n", uAddr, uPort, iTestValue);
-		
+		printf("Bld send to %x port %d Value %d\n", uAddr, uPort, iTestValue);		
 		BldClientSendRawData(pVoidBldClient, uIntDataSize*sizeof(int), 
 			(char*) liData);
-		iTestValue++;
+		
+		iTestValue++;		
 		sleep(iSleepInterval);
 		// Waiting for keyboard interrupt to break the infinite loop
 	}	
