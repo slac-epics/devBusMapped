@@ -51,8 +51,8 @@ public:
 	 * @return				The created Bld Client object
 	 */
 	static BldClientInterface* createBldClient(unsigned uAddr, 
-		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
-		char* sInteraceIp = 0);
+	  unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
+	  char* sInteraceIp = 0);
 		
 	/**
 	 * Create a Bld Client object
@@ -61,8 +61,8 @@ public:
 	 * @param uInteraceIp	Specify the NIC by IP address (in unsigned int format)
 	 */
 	static BldClientInterface* createBldClient(unsigned uAddr, 
-		unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
-		unsigned int uInteraceIp = 0);
+	  unsigned uPort, unsigned int uMaxDataSize, unsigned char ucTTL = 32, 
+	  unsigned int uInteraceIp = 0);
 private:
 	/// Disable object instantiation (No object semantics).
 	BldClientFactory();
@@ -82,11 +82,11 @@ extern "C"
  * and save the pointer in (*ppVoidBldClient)
  */
 int BldClientInitByInterfaceName(unsigned uAddr, unsigned uPort, 
-	unsigned int uMaxDataSize, unsigned char ucTTL, char* sInterfaceIp, 
-	void** ppVoidBldClient);
+  unsigned int uMaxDataSize, unsigned char ucTTL, char* sInterfaceIp, 
+  void** ppVoidBldClient);
 int BldClientInitByInterfaceAddress(unsigned uAddr, unsigned uPort, 
-	unsigned int uMaxDataSize, unsigned char ucTTL, unsigned int uInterfaceIp, 
-	void** ppVoidBldClient);	
+  unsigned int uMaxDataSize, unsigned char ucTTL, unsigned int uInterfaceIp, 
+  void** ppVoidBldClient);	
 
 /**
  * Release function: Call C++ delete operator to delete the BldClient

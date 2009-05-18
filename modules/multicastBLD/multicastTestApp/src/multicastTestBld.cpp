@@ -14,14 +14,11 @@ int testBldClient(int iTestType, char* sInterfaceIp)
 {	
 	if ( iTestType == 0 )
 	{	
-		printf( "Progarmming interface (CPP) test. Press Ctrl+C to break this test...\n" );
 		testBldAPI_CPP(sInterfaceIp);
 	}
-
-	if ( iTestType == 1 )
+	else if ( iTestType == 1 )
 	{
-		printf( "Progarmming interface (C) test. Press Ctrl+C to break this test...\n" );	
-		testBldAPI_C(sInterfaceIp);
+		testBldAPI_C(sInterfaceIp); 
 	}
 	
 	return 0;
