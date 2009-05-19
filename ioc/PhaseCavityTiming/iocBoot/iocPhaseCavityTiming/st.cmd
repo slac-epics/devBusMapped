@@ -11,7 +11,7 @@ ld( "bin/RTEMS-beatnik/PhaseCavityTiming.obj" )
 # Must be > max # elements * 8 since data
 # may be converted to doubles on IOC if
 # the client requests it.
-setenv("EPICS_CA_MAX_ARRAY_BYTES","2000000",1)
+setenv("EPICS_CA_MAX_ARRAY_BYTES", "2000000", 1)
 
 # Silence BSP warnings
 bspExtVerbosity = 0
@@ -110,11 +110,12 @@ dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
 PhaseCavityTiming_registerRecordDeviceDriver(pdbbase) 
 
 ## Load EPICS records
-dbLoadRecords("db/IP231.db","CARD=ao0")
-dbLoadRecords("db/IP330.db","CARD=ai0")
-dbLoadRecords("db/ip440.db","CARD=di0")
-dbLoadRecords("db/ip445.db","CARD=do0")
-dbLoadRecords("db/vmeDigiApp.db","digi=dig1,card=1,nelm=4096")
+dbLoadRecords( "db/IP231.db", "CARD=ao0" )
+dbLoadRecords( "db/IP330.db", "CARD=ai0" )
+dbLoadRecords( "db/ip440.db", "CARD=di0" )
+dbLoadRecords( "db/ip445.db", "CARD=do0" )
+dbLoadRecords( "db/rfCavity.db" )
+dbLoadRecords( "db/vmeDigiApp.db", "digi=dig1,card=1,nelm=4096" )
 # An EDM panel for the digitizer can be
 # started with the command:
 # edm -x -m "digi=<digi>" display/phaseCavity.edl

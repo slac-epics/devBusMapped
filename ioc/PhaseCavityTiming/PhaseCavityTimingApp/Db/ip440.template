@@ -5,6 +5,8 @@ record(bi, $(RECORDNAME) ) {
   field(INP, "@$(CARD) P$(PORT) B$(CH)")
   field(ZNAM, "$(ZNAM)")
   field(ONAM, "$(ONAM)")
+  field(ZSV, "$(ZSV)")
+  field(OSV, "$(OSV)")
 }
 
 

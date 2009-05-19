@@ -3,13 +3,16 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 5
-y 240
+x 25
+y 133
 w 682
 h 482
-font "helvetica-medium-r-18.0"
-ctlFont "helvetica-medium-r-18.0"
-btnFont "helvetica-medium-r-18.0"
+font "helvetica-medium-r-14.0"
+fontAlign "center"
+ctlFont "helvetica-medium-r-14.0"
+ctlFontAlign "center"
+btnFont "helvetica-medium-r-14.0"
+btnFontAlign "center"
 fgColor index 14
 bgColor index 3
 textColor index 14
@@ -495,168 +498,16 @@ minor 1
 release 0
 x 27
 y 101
-w 116
+w 74
 h 16
 font "helvetica-bold-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Attenuator Ctrl 1"
+  "Attenuator"
 }
 autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 27
-y 125
-w 116
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Attenuator Ctrl 2"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 27
-y 149
-w 116
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Attenuator Ctrl 3"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 27
-y 174
-w 116
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Attenuator Ctrl 4"
-}
-autoSize
-endObjectProperties
-
-# (Button)
-object activeButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 173
-y 99
-w 87
-h 20
-fgColor index 14
-onColor index 43
-offColor index 4
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "do0:port1:out1"
-buttonType "push"
-3d
-font "helvetica-medium-r-14.0"
-objType "controls"
-endObjectProperties
-
-# (Button)
-object activeButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 174
-y 123
-w 87
-h 20
-fgColor index 14
-onColor index 43
-offColor index 4
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "do0:port1:out2"
-buttonType "push"
-3d
-font "helvetica-medium-r-14.0"
-objType "controls"
-endObjectProperties
-
-# (Button)
-object activeButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 174
-y 147
-w 87
-h 20
-fgColor index 14
-onColor index 43
-offColor index 4
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "do0:port1:out3"
-buttonType "push"
-3d
-font "helvetica-medium-r-14.0"
-objType "controls"
-endObjectProperties
-
-# (Button)
-object activeButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 174
-y 171
-w 87
-h 20
-fgColor index 14
-onColor index 43
-offColor index 4
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "do0:port1:out4"
-buttonType "push"
-3d
-font "helvetica-medium-r-14.0"
-objType "controls"
 endObjectProperties
 
 # (Rectangle)
@@ -895,6 +746,7 @@ format "string"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 18
+fgAlarm
 bgColor index 0
 useDisplayBg
 autoHeight
@@ -903,5 +755,32 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "monitors"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 172
+y 104
+w 91
+h 16
+controlPv "rfCavity:attenuator"
+format "decimal"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 18
+bgColor index 43
+useDisplayBg
+editable
+autoHeight
+limitsFromDb
+fieldLen "2"
+nullColor index 0
+autoSelect
+newPos
+objType "controls"
 endObjectProperties
 
