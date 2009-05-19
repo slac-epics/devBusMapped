@@ -25,17 +25,19 @@ PhaseCavityTiming_DBD += Xy2440.dbd
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 PhaseCavityTiming_SRCS += PhaseCavityTiming_registerRecordDeviceDriver.cpp
 PhaseCavityTiming_SRCS_DEFAULT += PhaseCavityTimingMain.cpp
+PhaseCavityTiming_SRCS_DEFAULT += multicastTestBld.cpp
 PhaseCavityTiming_SRCS_vxWorks += -nil-
 
 #add a definition for each support application used by this application
 #PhaseCavityTiming_LIBS += xxx
 
+PhaseCavityTiming_LIBS += multicastBLD
+PhaseCavityTiming_LIBS += IP231
+PhaseCavityTiming_LIBS += IP330
+PhaseCavityTiming_LIBS += Xy2445
+PhaseCavityTiming_LIBS += Xy2440
+#PhaseCavityTiming_LIBS += evrSupport
 PhaseCavityTiming_LIBS_RTEMS += devBusMapped
-PhaseCavityTiming_LIBS_RTEMS += IP231
-PhaseCavityTiming_LIBS_RTEMS += IP330
-PhaseCavityTiming_LIBS_RTEMS += Xy2445
-PhaseCavityTiming_LIBS_RTEMS += Xy2440
-#PhaseCavityTiming_LIBS_RTEMS += evrSupport
 PhaseCavityTiming_LIBS_RTEMS += vmeDigiDevSup
 PhaseCavityTiming_LIBS_RTEMS += vmeDigi
 PhaseCavityTiming_LIBS_RTEMS += Ipac
