@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <malloc.h>
 
-#include "../../multicastBLDLib/src/multicastBLDLib.h"
+#include "multicastBLDLib.h"
 
 extern "C" 
 {

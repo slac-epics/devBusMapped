@@ -14,9 +14,8 @@ include $(TOP)/configure/CONFIG
 # several facilities (evr, micro, ...) for this to work.
 #BUILDFOR=_RTEMS
 
-#PROD_IOC     += multicastBLD
-
-LIBRARY_IOC  += multicastBLD
+LIBRARY		= multicastBLD
+INC			= multicastBLDLib.h
 
 multicastBLD_SRCS       = multicastBLDLib.cpp
 
