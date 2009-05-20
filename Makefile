@@ -14,7 +14,7 @@ DIRS+=tools
 DIRS+=base
 DIRS+=extensions
 DIRS+=modules
-DIRS+=iocTop
+DIRS+=ioc
 
 all:
 
