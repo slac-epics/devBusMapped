@@ -15,6 +15,7 @@ DIRS+=base
 DIRS+=extensions
 DIRS+=modules
 DIRS+=ioc
+DIRS+=services
 
 all:
 

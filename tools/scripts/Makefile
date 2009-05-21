@@ -13,7 +13,7 @@ endif
 INSTALL_BIN_DIR=$(INSTALL_LOCATION)/bin
 INSTALL_LIB_DIR=$(INSTALL_LOCATION)/lib
 
-TOOLS_BIN=epicsenv.sh epicsenv.csh
+TOOLS_BIN=epicsenv.sh epicsenv.csh iocenv.sh
 TOOLS_LIB=Makefile.displayvar
 
 all: install
