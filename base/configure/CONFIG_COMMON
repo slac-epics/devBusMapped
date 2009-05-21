@@ -30,7 +30,9 @@ CROSS1 = $(CROSS_COMPILER_TARGET_ARCHS$(word 1,$(CROSS_COMPILER_HOST_ARCHS)))
 # and EPICS_HOST_ARCH is one of it's words
 CROSS2 = $(CROSS_COMPILER_TARGET_ARCHS$(filter-out 1,$(words $(filter $(EPICS_HOST_ARCH),$(CROSS_COMPILER_HOST_ARCHS)))))
 
-BUILD_ARCHS = $(EPICS_HOST_ARCH) $(CROSS1) $(CROSS2)
+# NATIVE will be defined if BUILD_FOR_HOST_ARCH is defined
+NATIVE = $(EPICS_HOST_ARCH$(filter-out 1,$(words $(BUILD_FOR_HOST_ARCH))))
+BUILD_ARCHS = $(NATIVE) $(CROSS1) $(CROSS2)
 
 #-------------------------------------------------------
 # Default for perl if it's on the PATH,

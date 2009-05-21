@@ -95,10 +95,7 @@
 #
 #CROSS_COMPILER_TARGET_ARCHS=
 #CROSS_COMPILER_TARGET_ARCHS=vxWorks6-ppc604_long
-CROSS_COMPILER_TARGET_ARCHS=RTEMS-beatnik
-ifneq ($(EPICS_HOST_ARCH),linux-x86)
-CROSS_COMPILER_TARGET_ARCHS+=linux-x86
-endif
+CROSS_COMPILER_TARGET_ARCHS=RTEMS-beatnik linux-x86
 
 #  If only a subset of the host architectures perform
 #  the build for the CROSS_COMPILER_TARGET_ARCHS
@@ -184,3 +181,12 @@ USE_POSIX_THREAD_PRIORITY_SCHEDULING = YES
 #  EPICS version number string that is reported by many tools
 EPICS_SITE_VERSION = pcds-r$(shell svnversion $(EPICS_SITE_TOP))
 
+# =================================================================
+# By default EPICS is not build for the build machine architecture 
+# in PCDS environment
+# If you would like the EPICS module to be build for 
+# EPICS_HOST_ARCH set this variable
+# =================================================================
+ifdef BASE_TOP
+BUILD_FOR_HOST_ARCH=1
+endif

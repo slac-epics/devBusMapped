@@ -18,6 +18,14 @@ endif
 include $(EPICS_SITE_CONFIG)
 
 # =================================================================
+# By default EPICS is not build for the build machine architecture 
+# in PCDS environment
+# If you would like the EPICS module to be build for 
+# EPICS_HOST_ARCH set this variable
+# =================================================================
+BUILD_FOR_HOST_ARCH=1
+
+# =================================================================
 # Define EPICS_EXTENSIONS
 # EPICS_BASE usually appears last so other apps can override stuff:
 # =================================================================
