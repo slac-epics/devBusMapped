@@ -128,7 +128,7 @@ public:
     /*
 	 * Multicast functions
 	 */
-	void multicastSetInterface(unsigned interface); 
+	int multicastSetInterface(unsigned interface); 
 	int multicastSetTTL(unsigned char ucTTL);
 		 
 private:
@@ -510,13 +510,15 @@ Client::~Client()
 **
 ** --
 */
-void Client::multicastSetInterface(unsigned interface)
+int Client::multicastSetInterface(unsigned interface)
 {
 	in_addr address;
 	address.s_addr = htonl(interface);
 	if (setsockopt(_socket, IPPROTO_IP, IP_MULTICAST_IF, (char*)&address,
 	  sizeof(in_addr)) < 0) 
-	error(errno);
+		return 1;
+		
+	return 0;	
 }
 
 /**
@@ -648,16 +650,29 @@ BldClientBasic::BldClientBasic(unsigned uAddr, unsigned uPort,
 int BldClientBasic::_initClient( unsigned int uMaxDataSize, unsigned char ucTTL, 
   unsigned int uInterfaceIp)
 {
+	int iFailMulticastSetTTL = 0, iFailMulticastSetInterface = 0;
 	if ( _pSocket != NULL) delete _pSocket;	
 	
 	_pSocket = new Client(0, uMaxDataSize);
-	_pSocket->multicastSetTTL(ucTTL);
-  
+	iFailMulticastSetTTL = _pSocket->multicastSetTTL(ucTTL);
+	
+	
 	if ( uInterfaceIp != 0) 
 	{
 		printf( "multicast interface IP: %ud\n", uInterfaceIp );
-		_pSocket->multicastSetInterface(uInterfaceIp);
+		iFailMulticastSetInterface = _pSocket->multicastSetInterface(uInterfaceIp);
 	}  	
+	
+	/*
+	 * Error Report
+	 */
+	if ( iFailMulticastSetTTL != 0 )
+		printf( "[Error] BldClientBasic::_initClient : multicastSetTTL(%d) fail\n",
+		  ucTTL );
+	if ( iFailMulticastSetInterface != 0 )
+		printf( "[Error] BldClientBasic::_initClient : multicastSetInterface(%u) fail\n",
+		  uInterfaceIp );				
+	
 	return 0;
 }
 
