@@ -33,4 +33,19 @@ LIB_SRCS += epicsPv.cc
 LIB_SRCS += pv.cc
   
 include $(TOP)/configure/RULES
-   
+
+ifneq (,$(strip $(EDMPVOBJECTS)))
+ifneq (,$(strip $(EDMOBJECTS)))
+buildInstall:	installLibEdmBase $(EDMPVOBJECTS)/edmPvObjects
+
+installLibEdmBase: $(INSTALL_BIN)/edm$(EXE)
+	@echo "Installing edmObjects for libEdmBase"
+ifneq (,$(strip $(SHRLIB_SUFFIX)))
+	$(INSTALL_BIN)/edm$(EXE) -add $(EDMLIBS)/libEdmBase$(SHRLIB_SUFFIX)
+else
+	$(INSTALL_BIN)/edm$(EXE) -add $(EDMLIBS)/libEdmBase$(LIB_SUFFIX)
+endif	# SHRLIBNAME
+	sed -i -e 's^$(EDMLIBS)^$$\(EDMLIBS\)^' $(EDMOBJECTS)/edmObjects
+
+endif	# EDMOBJECTS
+endif	# EDMPVOBJECTS

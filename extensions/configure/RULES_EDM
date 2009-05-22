@@ -1,0 +1,32 @@
+ifdef T_A
+ifeq ($(findstring Host,$(VALID_BUILDS)),Host)
+
+buildInstall : $(INSTALL_IDLS)
+
+#	@echo "Installing edmObjects for $(SHRLIBNAME)"
+#	edm -add $(EDMLIBS)/$(SHRLIBNAME)
+#	sed -i -e 's^$(EDMLIBS)^$$\(EDMLIBS\)^' $(EDMOBJECTS)/edmObjects
+ifneq (,$(strip $(EDMLIBS)))
+ifneq (,$(strip $(SHRLIBNAME)))
+$(EDMOBJECTS)/edmObjects: $(EDMLIBS)/$(SHRLIBNAME)
+else
+$(EDMOBJECTS)/edmObjects: $(EDMLIBS)/$(LIBNAME)
+endif # SHRLIBNAME
+	@echo "Installing edmObjects for $(<F)"
+	edm -add $<
+	sed -i -e 's^$(EDMLIBS)^$$\(EDMLIBS\)^' $(EDMOBJECTS)/edmObjects
+endif # EDMLIBS
+
+ifneq (,$(strip $(EDMLIBS)))
+ifneq (,$(strip $(SHRLIBNAME)))
+$(EDMPVOBJECTS)/edmPvObjects: $(EDMLIBS)/$(SHRLIBNAME)
+else
+$(EDMPVOBJECTS)/edmPvObjects: $(EDMLIBS)/$(LIBNAME)
+endif # SHRLIBNAME
+	@echo "Installing edmPvObjects for $(<F)"
+	edm -addpv $<
+	sed -i -e 's^$(EDMLIBS)^$$\(EDMLIBS\)^' $(EDMPVOBJECTS)/edmPvObjects
+endif # EDMLIBS
+
+endif
+endif

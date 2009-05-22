@@ -50,6 +50,10 @@ ifdef EPICS_HOST_ARCH
    
    include $(TOP)/configure/RULES
    
+ifneq (,$(strip $(EDMOBJECTS)))
+buildInstall:	$(EDMOBJECTS)/edmObjects
+endif	# EDMOBJECTS
+ 
 else
    ifneq ($(wildcard $(TOP)/config)x,x)
      # New Makefile.Host config file location

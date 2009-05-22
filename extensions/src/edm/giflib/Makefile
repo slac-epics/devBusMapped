@@ -60,3 +60,7 @@ LIB_SRCS += gif.cc
 LIB_SRCS += reg_libcf322683-513e-4570-a44b-7cdd7cae0de5.cc
    
 include $(TOP)/configure/RULES
+
+ifneq (,$(strip $(EDMOBJECTS)))
+buildInstall:	$(EDMOBJECTS)/edmObjects
+endif	# EDMOBJECTS

@@ -64,3 +64,6 @@ LIB_SRCS += reg_lib57d79238-2924-420b-ba67-dfbecdf03fcd.cc
 
 include $(TOP)/configure/RULES
    
+ifneq (,$(strip $(EDMOBJECTS)))
+buildInstall:	$(EDMOBJECTS)/edmObjects
+endif	# EDMOBJECTS
