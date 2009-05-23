@@ -20,7 +20,9 @@ PhaseCavityTiming_DBD += IP231.dbd
 PhaseCavityTiming_DBD += IP330.dbd
 PhaseCavityTiming_DBD += Xy2445.dbd
 PhaseCavityTiming_DBD += Xy2440.dbd
-#PhaseCavityTiming_DBD += evrSupport.dbd
+PhaseCavityTiming_DBD += evrSupport.dbd
+PhaseCavityTiming_DBD += devMrfEr.dbd
+PhaseCavityTiming_DBD += dbRestore.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 PhaseCavityTiming_SRCS += PhaseCavityTiming_registerRecordDeviceDriver.cpp
@@ -36,14 +38,15 @@ PhaseCavityTiming_LIBS += IP231
 PhaseCavityTiming_LIBS += IP330
 PhaseCavityTiming_LIBS += Xy2445
 PhaseCavityTiming_LIBS += Xy2440
-#PhaseCavityTiming_LIBS += evrSupport
+PhaseCavityTiming_LIBS += evrSupport
+PhaseCavityTiming_LIBS += generalTime
+PhaseCavityTiming_LIBS += devMrfEr
+PhaseCavityTiming_LIBS += mrfVme64x
+PhaseCavityTiming_LIBS += restore
 PhaseCavityTiming_LIBS_RTEMS += devBusMapped
 PhaseCavityTiming_LIBS_RTEMS += vmeDigiDevSup
 PhaseCavityTiming_LIBS_RTEMS += vmeDigi
 PhaseCavityTiming_LIBS_RTEMS += Ipac
-PhaseCavityTiming_LIBS_RTEMS += devMrfEr
-PhaseCavityTiming_LIBS_RTEMS += generalTime
-PhaseCavityTiming_LIBS_RTEMS += mrfVme64x
 PhaseCavityTiming_LIBS_RTEMS += $(EPICS_BASE_IOC_LIBS)
 
 #===========================

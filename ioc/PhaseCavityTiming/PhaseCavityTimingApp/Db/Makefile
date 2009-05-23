@@ -16,12 +16,17 @@ DB += IP330.template
 DB += ip440.template
 DB += ip445.template
 DB += rfCavity.db
+DB += evrEventCtrl.template
+DB += evrEventRate.template
+DB += evrWithExtDelays.template
+DB += evrLabels.template
 
 # Generate db files from substitutions
 DB += IP231.db
 DB += IP330.db
 DB += ip440.db
 DB += ip445.db
+DB += phaseCavityevr.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

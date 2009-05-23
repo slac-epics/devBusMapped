@@ -103,6 +103,32 @@ ip330StartConvertByName( "ai0" )
 # and all outputs update when ip231SimulTrigger(<cardNo>) is called
 ip231Create( "ao0", 0, 3, "transparent" )
 
+# Configure EVR if it exists.
+# Choose the proper configuration - PMC or VME.
+# Note - see README_evrTest for hardware setup and instructions for PMC 
+# one-time configuration.
+#
+#ErConfigure(0,0x000000,0x00,0,1)  # PMC type
+#ErConfigure(0,0x300000,0x60,4,0)  # VME type.
+#
+#    VME: ErConfigure(<instance>,<address>,<vector>,<level>,0)
+#    PMC: ErConfigure(<instance>,    0    ,    0   ,   0   ,1)
+#
+#    where instance = EVR instance, starting from 0, incrementing by 1
+#                     for each subsequent card
+#    and   address  = VME card address, starting from 0x300000, 
+#                     incrementing by 0x100000 for each subsequent card
+#                     (0 for PMC)
+#    and   vector   = VME interrupt vector, starting from 0x60, 
+#                     incrementing by 0x02 for each subsequent card
+#                     (0 for PMC)
+#    and   level    = VME interrupt level (set to 4 - can be the same 
+#                     for all EVRs)
+#                     (0 for PMC)
+#    and   0        = VME
+#       or 1        = PMC
+ErConfigure( 0, 0, 0, 0, 1 )
+
 # Load EPICS database definition
 dbLoadDatabase("dbd/PhaseCavityTiming.dbd",0,0)
 
@@ -116,17 +142,18 @@ dbLoadRecords( "db/ip440.db", "CARD=di0" )
 dbLoadRecords( "db/ip445.db", "CARD=do0" )
 dbLoadRecords( "db/rfCavity.db" )
 dbLoadRecords( "db/vmeDigiApp.db", "digi=dig1,card=1,nelm=4096" )
-# An EDM panel for the digitizer can be
-# started with the command:
-# edm -x -m "digi=<digi>" display/phaseCavity.edl
+dbLoadRecords( "db/phaseCavityevr.db", "LLL=UND,RRR=R01,NN=01" )
 
 # Print list of loaded binaries (helpful for debugging)
 lsmod()
+
+# An EDM panel for the phase cavity timing IOC can be
+# started with the command:
+# edm -x -m "digi=<digi>" display/phaseCavity.edl
 
 # Convenience aliases
 reboot=rtemsReboot
 mon=rtemsMonitor
 
-# 
 iocInit()
 
