@@ -13,7 +13,7 @@ if [ ! -e ${EPICS_SITE_CONFIG} ]; then
 	exit 1
 fi
 
-if [ ! -x $(dirname ${EPICS_SITE_CONFIG})/tools/current/bin/iocenv.sh ]; then
+if [ ! -r $(dirname ${EPICS_SITE_CONFIG})/tools/current/bin/iocenv.sh ]; then
 	echo "ERROR: cannot source $(dirname ${EPICS_SITE_CONFIG})/tools/current/bin/iocenv.sh."
 	exit 5
 fi
@@ -31,25 +31,41 @@ LIST=""
 NAME=${CAS_SUBNET_NAME}
 while [ -n "${NAME}" ]; do
 	LIST="${NAME} ${LIST}"
-	NAME=$(echo ${NAME} | sed -e 's|[^.]*||g')
+	NAME=$(echo ${NAME} | sed -e 's|[^\.]\+[\.]*||')
 done
 
 if [ -e ${GATEWAY}/etc/default.gwenv ]; then
+	echo "Loading ${GATEWAY}/etc/default.gwenv"
 	source ${GATEWAY}/etc/default.gwenv
 fi
 for net in ${LIST}; do
 	if [ -e ${GATEWAY}/etc/${net}.gwenv ]; then
+		echo "Loading ${GATEWAY}/etc/${net}.gwenv"
 		source ${GATEWAY}/etc/${net}.gwenv
 	fi
 done
+
+# Basic check of the configuration
+if [ -z "${CAS_IPADDR}" ]; then
+	echo "ERROR: no CA Server IP for ${CAS_SUBNET_NAME}, must exit."
+	exit 5
+fi
+# Calculate all IPs of the computer on which the gateway is running
+# We use this variable to tell teh gateway to ignore any client
+# relayed by another gateway running on this computer
+OTHER_GATEWAY_IPS=
+for ip in $(/sbin/ifconfig | grep 'inet addr:' | sed -e 's|^.*inet addr:\([^[:space:]]*\).*$|\1|' | grep -v ${CAS_IPADDR}); do
+	OTHER_GATEWAY_IPS="${OTHER_GATEWAY_IPS} ${ip}"
+done
+OTHER_GATEWAY_IPS=${OTHER_GATEWAY_IPS:1}
 
 case $1 in
 	"start")
 		# Setup run-time paths
 		if [ ! -d ${OUT_DIR} ]; then
-			mkdir -p ${LOG_DIR}
+			mkdir -p ${OUT_DIR}
 			if [ $? -ne 0 ]; then
-				echo "ERROR: could not create log directory ${LOG_DIR}."
+				echo "ERROR: could not create log directory ${OUT_DIR}."
 				exit 10
 			fi
 		fi
@@ -102,6 +118,9 @@ case $1 in
 		if [ -n "${DISABLE_CACHE}" ]; then
 			PARAMS="${PARAMS} -no_cache"
 		fi
+		if [ -n "${OTHER_GATEWAY_IPS}" ]; then
+			PARAMS="${PARAMS} -signore \"${OTHER_GATEWAY_IPS}\""
+		fi
 		PARAMS="${PARAMS} -server"
 		${EPICS_EXTENSIONS}/bin/${EPICS_HOST_ARCH}/gateway ${PARAMS}
 		if [ $? -ne 0 ]; then
@@ -112,12 +131,18 @@ case $1 in
 	"stop")
 		if [ -e ${HOME_DIR}/gateway.killer ]; then
 			source ${HOME_DIR}/gateway.killer
+			sleep 1
+			rm ${HOME_DIR}/gateway.killer
 		else
+			echo "No gateway running for ${CAS_SUBNET_NAME} on $(hostname)."
 			exit 50
 		fi
 		if [ -e ${CMD_FILE} ]; then
 			rm ${CMD_FILE}
 		fi
 		;;
+	*)
+		echo "Invalid command $1."
+		exit 99
 esac
 exit 0
