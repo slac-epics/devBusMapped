@@ -1,3 +1,0 @@
-device(waveform,VME_IO,devWfVmeDigi,              "VMEDigi-Waveform")
-#don't include anything here so that we can make a loadable module
-#include "devBusMapped.dbd"
