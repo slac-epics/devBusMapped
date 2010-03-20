@@ -217,6 +217,9 @@ char          *endp;
 
 	pvt->addr = (volatile void*)rval;
 
+	if ( 0 == rval )
+		prec->pact = TRUE;
+
 	return !rval;
 }
 
