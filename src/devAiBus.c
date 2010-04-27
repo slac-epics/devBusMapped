@@ -90,5 +90,10 @@ static long init_record(aiRecord *prec)
 static long read_ai(aiRecord *pai)
 {
 DevBusMappedPvt pvt = pai->dpvt;
-	return devBusMappedGetVal(pvt, &pai->rval, (dbCommon*)pai);
+long            rval;
+epicsUInt32     v;
+
+	rval = devBusMappedGetVal(pvt, &v, (dbCommon*)pai);
+	pai->rval = (epicsInt32)v;
+	return rval;
 }
