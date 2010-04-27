@@ -74,7 +74,7 @@ epicsExportAddress(dset, devMbboBus);
 static long init_record(mbboRecord *pmbbo)
 {
 DevBusMappedPvt pvt;
-unsigned		v;
+epicsUInt32		v;
 
    	if ( devBusVmeLinkInit(&pmbbo->out, 0, (dbCommon*) pmbbo) ) {
 		recGblRecordError(S_db_badField,(void *)pmbbo,
@@ -110,7 +110,7 @@ unsigned		v;
 static long write_mbbo(mbboRecord *pmbbo)
 {
 DevBusMappedPvt pvt = pmbbo->dpvt;
-unsigned 		data;
+epicsUInt32		data;
 long			rval;
 
 	/* we could maintain a 'per word' mutex but that would be

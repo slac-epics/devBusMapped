@@ -82,9 +82,11 @@ long rval = 0;
 	}
 
 	if (!prec->pini) {
+		epicsUInt32 v;
 		DevBusMappedPvt pvt = prec->dpvt;
-		if ( devBusMappedGetVal(pvt, &prec->val, (dbCommon*)prec) )
+		if ( devBusMappedGetVal(pvt, &v, (dbCommon*)prec) )
 			recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
+		prec->val = (epicsInt32)v;
 		recGblResetAlarms(prec);
 	}
     return(rval);

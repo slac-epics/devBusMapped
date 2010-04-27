@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include <epicsMutex.h>
 #include <registry.h>
 #include <alarm.h>
+#include <dbAccess.h>
 
 #define DEV_BUS_MAPPED_PVT
 #include <devBusMapped.h>
@@ -18,56 +20,56 @@ static void	*ioRegistryId = (void*)&ioRegistryId;
 static void	*ioscanRegistryId = (void*)&ioscanRegistryId;
 
 
-#define DECL_INP(name) static int name(DevBusMappedPvt pvt, unsigned *pv, dbCommon *prec)
-#define DECL_OUT(name) static int name(DevBusMappedPvt pvt, unsigned v, dbCommon *prec)
+#define DECL_INP(name) static int name(DevBusMappedPvt pvt, epicsUInt32 *pv, dbCommon *prec)
+#define DECL_OUT(name) static int name(DevBusMappedPvt pvt, epicsUInt32 v, dbCommon *prec)
 
 DECL_INP(inbe32)
-	{ *pv = in_be32(pvt->addr);								return 0; }
+	{ *pv = in_be32(pvt->addr);							return 0; }
 DECL_INP(inle32)
-	{ *pv = in_le32(pvt->addr);								return 0; }
+	{ *pv = in_le32(pvt->addr);							return 0; }
 DECL_INP(inbe16)
-	{ *pv = (unsigned short)(in_be16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (uint16_t)(in_be16(pvt->addr) & 0xffff);	return 0; }
 DECL_INP(inle16)
-	{ *pv = (unsigned short)(in_le16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (uint16_t)(in_le16(pvt->addr) & 0xffff);	return 0; }
 DECL_INP(in8)
-	{ *pv = (unsigned char)(in_8(pvt->addr) & 0xff);		return 0; }
+	{ *pv = (uint8_t)(in_8(pvt->addr) & 0xff);			return 0; }
 
 DECL_INP(inbe16s)
-	{ *pv = (signed short)(in_be16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (int16_t)(in_be16(pvt->addr) & 0xffff);		return 0; }
 DECL_INP(inle16s)
-	{ *pv = (signed short)(in_le16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (int16_t)(in_le16(pvt->addr) & 0xffff);		return 0; }
 DECL_INP(in8s)
-	{ *pv = (signed char)(in_8(pvt->addr) & 0xff);			return 0; }
+	{ *pv = (int8_t)(in_8(pvt->addr) & 0xff);			return 0; }
 
 DECL_INP(inm32)
-	{ *pv = *(unsigned *) pvt->addr;						return 0; }
+	{ *pv = *(uint32_t *) pvt->addr;					return 0; }
 DECL_INP(inm16)
-	{ *pv = *(unsigned short *)pvt->addr;					return 0; }
+	{ *pv = *(uint16_t *)pvt->addr;						return 0; }
 DECL_INP(inm8)
-	{ *pv = *(unsigned char *)pvt->addr;					return 0; }
+	{ *pv = *(uint8_t  *)pvt->addr;						return 0; }
 
 DECL_INP(inm16s)
-	{ *pv = *(signed short *)pvt->addr;						return 0; }
+	{ *pv = *(int16_t  *)pvt->addr;						return 0; }
 DECL_INP(inm8s)
-	{ *pv = *(signed char *)pvt->addr;						return 0; }
+	{ *pv = *(int8_t   *)pvt->addr;						return 0; }
 	
 DECL_OUT(outbe32)
-	{ out_be32(pvt->addr,v);		return 0; }
+	{ out_be32(pvt->addr,v);							return 0; }
 DECL_OUT(outle32)
-	{ out_le32(pvt->addr,v);		return 0; }
+	{ out_le32(pvt->addr,v);							return 0; }
 DECL_OUT(outbe16)
-	{ out_be16(pvt->addr,v&0xffff);	return 0; }
+	{ out_be16(pvt->addr,v&0xffff);						return 0; }
 DECL_OUT(outle16)
-	{ out_le16(pvt->addr,v&0xffff);	return 0; }
+	{ out_le16(pvt->addr,v&0xffff);						return 0; }
 DECL_OUT(out8)
-	{ out_8(pvt->addr, v&0xff);		return 0; }
+	{ out_8(pvt->addr, v&0xff);							return 0; }
 
 DECL_OUT(outm32)
-	{ *(unsigned *)pvt->addr = v;					return 0; }
+	{ *(uint32_t *)pvt->addr = v;						return 0; }
 DECL_OUT(outm16)
-	{ *(unsigned short *)pvt->addr = v & 0xffff;	return 0; }
+	{ *(uint16_t *)pvt->addr = v & 0xffff;				return 0; }
 DECL_OUT(outm8)
-	{ *(unsigned char *)pvt->addr = v & 0xff;		return 0; }
+	{ *(uint8_t  *)pvt->addr = v & 0xff;				return 0; }
 
 static DevBusMappedAccessRec m32   = { inm32, outm32 };
 static DevBusMappedAccessRec be32  = { inbe32, outbe32 };
@@ -88,7 +90,7 @@ devBusVmeLinkInit(DBLINK *l, DevBusMappedPvt pvt, dbCommon *prec)
 {
 char          *plus,*comma,*comma1,*cp;
 unsigned long offset = 0;
-unsigned long rval   = 0;
+uintptr_t     rval   = 0;
 char          *base  = 0;
 char          *endp;
 
@@ -103,7 +105,21 @@ char          *endp;
     switch (l->type) {
 
     case (CONSTANT) :
-			recGblInitConstantLink(l, DBF_ULONG, &rval);
+		{
+			unsigned long long ull;
+			char               *endp;
+			if ( l->value.constantStr ) {
+				ull = strtoull(l->value.constantStr, &endp, 0);
+				if ( endp > l->value.constantStr ) {
+					rval = ull;
+				} else {
+					errlogPrintf("devBusVmeLinkInit: Invalid CONSTANT link value\n");
+					rval = 0;
+				}
+			} else {
+				rval = 0;
+			}
+		}
         break;
 
     case (VME_IO) :
@@ -140,7 +156,7 @@ char          *endp;
 				/* they specified a number; create a registry entry on the fly... */
 
 				/* make a canonical name */
-				sprintf(buf,"0x%08lX",rval);
+				sprintf(buf,"0x%"PRIXPTR,rval);
 
 				/* try to find; if that fails, try to create; if this fails, try
 				 * to find again - someone else might have created in the meantime...
@@ -154,7 +170,7 @@ char          *endp;
 			}
 
 			if ( pvt->dev ) {
-				rval  = (unsigned)pvt->dev->baseAddr;
+				rval  = (uintptr_t)pvt->dev->baseAddr;
 				rval += l->value.vmeio.card << l->value.vmeio.signal;
 			} else {
 				rval = 0;
@@ -217,6 +233,9 @@ char          *endp;
 
 	pvt->addr = (volatile void*)rval;
 
+	if ( 0 == rval )
+		prec->pact = TRUE;
+
 	return !rval;
 }
 
@@ -224,7 +243,7 @@ char          *endp;
  * (raise alarms)
  */
 int
-devBusMappedGetVal(DevBusMappedPvt pvt, unsigned *pvalue, dbCommon *prec)
+devBusMappedGetVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec)
 {
 int rval = pvt->acc->rd(pvt, pvalue, prec);
 	if ( rval )
@@ -233,7 +252,7 @@ int rval = pvt->acc->rd(pvt, pvalue, prec);
 }
 
 int
-devBusMappedPutVal(DevBusMappedPvt pvt, unsigned value, dbCommon *prec)
+devBusMappedPutVal(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec)
 {
 int rval = pvt->acc->wr(pvt, value, prec);
 	if ( rval )
@@ -246,7 +265,7 @@ int rval = pvt->acc->wr(pvt, value, prec);
  * freshly allocated 'DevBusMappedDev' struct or NULL on failure.
  */
 DevBusMappedDev
-devBusMappedRegister(char *name, volatile void * baseAddress)
+devBusMappedRegister(const char *name, volatile void * baseAddress)
 {
 DevBusMappedDev	rval = 0, d;
 
@@ -276,13 +295,13 @@ DevBusMappedDev	rval = 0, d;
 }
 
 int
-devBusMappedRegisterIO(char *name, DevBusMappedAccess acc)
+devBusMappedRegisterIO(const char *name, DevBusMappedAccess acc)
 {
 char *n;
 
 	/* EPICS registry doesn't copy the name string, so we do */
 	if ( 0 == (n=malloc(strlen(name)+1)) )
-		return 0;
+		return -1;
 
 	strcpy(n,name);
 
@@ -290,13 +309,13 @@ char *n;
 }
 
 int
-devBusMappedRegisterIOScan(char *name, IOSCANPVT scan)
+devBusMappedRegisterIOScan(const char *name, IOSCANPVT scan)
 {
 char *n;
 
 	/* EPICS registry doesn't copy the name string, so we do */
 	if ( 0 == (n=malloc(strlen(name)+1)) )
-		return 0;
+		return -1;
 
 	strcpy(n,name);
 
@@ -305,7 +324,7 @@ char *n;
 
 /* Find the 'devBusMappedDev' of a registered device by name */
 DevBusMappedDev
-devBusMappedFind(char *name)
+devBusMappedFind(const char *name)
 {
 	return registryFind(registryId, name);
 }

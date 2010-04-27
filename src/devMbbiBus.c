@@ -77,7 +77,7 @@ static long read_mbbi(mbbiRecord *pmbbi)
 {
 DevBusMappedPvt pvt = pmbbi->dpvt;
 long			rval;
-unsigned		v;
+epicsUInt32		v;
 
     rval = devBusMappedGetVal(pvt, &v, (dbCommon*)pmbbi);
 	if ( rval >=0 ) {

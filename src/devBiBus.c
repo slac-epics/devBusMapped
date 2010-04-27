@@ -89,7 +89,7 @@ static long init_record(biRecord *prec)
 
 static long read_bi(biRecord *pbi)
 {
-unsigned		v;
+epicsUInt32		v;
 long			rval;
 DevBusMappedPvt pvt = pbi->dpvt;
 	rval = devBusMappedGetVal(pvt, &v, (dbCommon*)pbi);
