@@ -4,6 +4,9 @@ TOP=../..
 endif
 
 include $(TOP)/configure/CONFIG
+ifeq ($(EPICS_HOST_ARCH),solaris-sparc-gnu)
+CROSS_COMPILER_TARGET_ARCHS = 
+endif
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
@@ -37,4 +40,4 @@ include $(TOP)/configure/RULES
 #  ADD RULES AFTER THIS LINE
 
 #suppress non-strict warnings
-CMPLR = ANSI
+CMPLR = XXX
