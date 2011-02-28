@@ -18,6 +18,8 @@
 #
 #==============================================================
 #
+devBusMapped-R2-2-1:    Modify RELEASE_SITE to use base-R3-14-8-3-lcls6_p1
+
 devBusMapped-R2-2-0:    Build against EPICS R3.14.8.2 and 
                         RTEMS 4.9.4 (base-R3-14-8-3-lcls6)
 
