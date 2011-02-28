@@ -18,7 +18,7 @@
 #
 #==============================================================
 #
-devBusMapped-R3-0-1:    Modify RELEASE_SITE to use base-R3-14-8-2-lcls6-p1
+devBusMapped-R3-0-1:    Modify RELEASE_SITE to use base-R3-14-8-2-lcls6_p1
                         Modify configure/RELEASE to use miscUtils-R2-2-1
 
 devBusMapped-R3-0-0:    Import/sync from SSRL repository.
