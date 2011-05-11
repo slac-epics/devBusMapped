@@ -9,6 +9,7 @@
 #include <registry.h>
 #include <alarm.h>
 #include <dbAccess.h>
+#include <errlog.h>
 
 #define DEV_BUS_MAPPED_PVT
 #include <devBusMapped.h>
