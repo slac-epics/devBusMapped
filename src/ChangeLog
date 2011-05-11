@@ -1,3 +1,10 @@
+    20110511 (T.S.):
+
+    * devBoBus.c: *** FEATURE CHANGE ***
+    let init_record return 0 (do convert) if PINI=NO so that initial value
+    is read from hardware. If PINI=YES then '2' (no convert) is returned as
+    before.
+
 	20100420 (T.S.):
 
 	* devAoBus.c: *** FEATURE CHANGE ***
