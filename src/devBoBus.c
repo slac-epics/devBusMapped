@@ -77,6 +77,7 @@ long rval = 2; /* don't convert */
 		}
 		prec->rval = v;
 		recGblResetAlarms(prec);
+		rval = 0; /* do convert */
 	}
 
     return(rval);

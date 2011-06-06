@@ -1,0 +1,77 @@
+#==============================================================
+#
+#  Name: RELEASE_NOTES
+#
+#  Rem: This files describes release notes for
+#       devBusMapped support.
+#
+#  Auth: dd-mmm-yyyy, Till Strauman      (STRAUMAN)
+#  Rev:  dd-mmm-yyyy, Reviewer's Name    (USERNAME)
+#--------------------------------------------------------------
+#  Mod:
+#        19-Mar-2010, S. Hoobler         (SONYA):
+#           release devBusMapped-R2-2-0
+#        23-Feb-2010, K. Luchini         (LUCHINI):
+#           release devBusMapped-R2-1-0
+#        29-Apr-2009, K. Luchini         (LUCHINI):
+#           release devBusMapped-R2-0-0
+#
+#==============================================================
+#
+devBusMapped-R3-0-1:    Also, Build against miscUtils-R2-2-2
+
+devBusMapped-R3-0-0:    Import/sync from SSRL repository.
+                        This release adds the following features:
+			  - use explicit 32-bit types instead of
+			    'int', 'unsigned' etc. This silences
+			    compiler warnings but could require
+			    applications to also change to using
+			    types from epicsTypes.h to silence
+			    warnings.
+			 - don't include <dbAccess.h> from <devBusMapped.h>
+			   it turns out that an EPICS IOC application cannot
+			   include both, dbAccess.h and cadef.h without 
+			   getting redefinition of symbol errors (tsss
+			   EPICS core architects!).
+			   devBusMapped.h now includes everything that
+			   is needed to compile this header itself but
+			   your application may need additional #includes
+			   since <dbAccess.h> is no longer included
+			   implicitly.
+			 - added c++ 'extern "C"' linkage declaration
+			   to devBusMapped.h
+			 - AO 'init_record' changed semantics:
+			   Let init_record return '2' (no convert) instead of
+			   (0). This lets the record use the initial VAL or DOL
+			   (if set), respectively if PINI=YES. (The current
+			   and previous behavior reads 'RVAL' from the hardware
+			   and converts to VAL if PINI=NO.)
+
+			   Previously, if PINI=YES the user would have to
+			   specify an initial RVAL (while VAL/DOL being
+			   ignored).
+
+			NOTE: due to changes to the devBusMapped.h header
+			the major release number was incremented.
+
+devBusMapped-R2-2-1:    Modify RELEASE_SITE to use base-R3-14-8-2-lcls6_p1
+                        Modify configure/RELEASE to use miscUtils-R2-2-1
+	
+devBusMapped-R2-2-0:    Build against EPICS R3.14.8.2 and 
+                        RTEMS 4.9.4 (base-R3-14-8-3-lcls6)
+
+devBusMapped-R2-1-0:    Build against EPICS R3.14.8.2 and 
+                        RTEMS 4.9.3 (base-R3-14-8-3-lcls5)
+
+devBusMapped-R2-0-0:
+Build against EPICS R3.14.8.2 and RTEMS 4.9.1 (base-R3-14-8-3-lcls3)
+
+devBusMapped-R1-0-2-1:
+modifications needed to bring the module to EPICS R3-14-9 standard
+
+devBusMapped-R1-0-2:
+Build against EPICS R3.14.9 and RTEMS 4.7.1 (base-R3-14-9-lcls1)
+
+devBusMapped-R1-0-1:
+Build against EPICS R3.14.8.2 and RTEMS 4.7.1 (base-R3-14-8-2-lcls2)
+
