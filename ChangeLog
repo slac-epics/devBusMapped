@@ -1,4 +1,10 @@
 Changes since R3-0-1
+ - devSup for stringin and stringout has been added.
+ - !!! changed access method API !!!. A 'index' parameter has been
+   added so that access methods can be used to read/write array
+   elements. 
+ - support for (numerical) arguments to access methods (from INP/OUT
+   field) has been added.
  - changed internal implementation use ELLLISTs to store
    registered entries rather than registry. This was changed
    so that dbior can list existing registrations.

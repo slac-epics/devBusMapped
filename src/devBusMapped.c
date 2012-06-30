@@ -112,56 +112,56 @@ DBMNode n;
 
 
 
-#define DECL_INP(name) static int name(DevBusMappedPvt pvt, epicsUInt32 *pv, dbCommon *prec)
-#define DECL_OUT(name) static int name(DevBusMappedPvt pvt, epicsUInt32 v, dbCommon *prec)
+#define DECL_INP(name) static int name(DevBusMappedPvt pvt, epicsUInt32 *pv, int idx, dbCommon *prec)
+#define DECL_OUT(name) static int name(DevBusMappedPvt pvt, epicsUInt32 v,   int idx, dbCommon *prec)
 
 DECL_INP(inbe32)
-	{ *pv = in_be32(pvt->addr);							return 0; }
+	{ *pv = in_be32(pvt->addr + (idx<<2));			    			return 0; }
 DECL_INP(inle32)
-	{ *pv = in_le32(pvt->addr);							return 0; }
+	{ *pv = in_le32(pvt->addr + (idx<<2));							return 0; }
 DECL_INP(inbe16)
-	{ *pv = (uint16_t)(in_be16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (uint16_t)(in_be16(pvt->addr + (idx<<1)) & 0xffff);		return 0; }
 DECL_INP(inle16)
-	{ *pv = (uint16_t)(in_le16(pvt->addr) & 0xffff);	return 0; }
+	{ *pv = (uint16_t)(in_le16(pvt->addr + (idx<<1)) & 0xffff);		return 0; }
 DECL_INP(in8)
-	{ *pv = (uint8_t)(in_8(pvt->addr) & 0xff);			return 0; }
+	{ *pv = (uint8_t)(in_8(pvt->addr + idx) & 0xff);				return 0; }
 
 DECL_INP(inbe16s)
-	{ *pv = (int16_t)(in_be16(pvt->addr) & 0xffff);		return 0; }
+	{ *pv = (int16_t)(in_be16(pvt->addr + (idx<<1)) & 0xffff);		return 0; }
 DECL_INP(inle16s)
-	{ *pv = (int16_t)(in_le16(pvt->addr) & 0xffff);		return 0; }
+	{ *pv = (int16_t)(in_le16(pvt->addr + (idx<<1)) & 0xffff);		return 0; }
 DECL_INP(in8s)
-	{ *pv = (int8_t)(in_8(pvt->addr) & 0xff);			return 0; }
+	{ *pv = (int8_t)(in_8(pvt->addr+idx) & 0xff);					return 0; }
 
 DECL_INP(inm32)
-	{ *pv = *(uint32_t *) pvt->addr;					return 0; }
+	{ *pv = *(((uint32_t *)pvt->addr) + idx);						return 0; }
 DECL_INP(inm16)
-	{ *pv = *(uint16_t *)pvt->addr;						return 0; }
+	{ *pv = *(((uint16_t *)pvt->addr) + idx);						return 0; }
 DECL_INP(inm8)
-	{ *pv = *(uint8_t  *)pvt->addr;						return 0; }
+	{ *pv = *(((uint8_t  *)pvt->addr) + idx);						return 0; }
 
 DECL_INP(inm16s)
-	{ *pv = *(int16_t  *)pvt->addr;						return 0; }
+	{ *pv = *(((int16_t  *)pvt->addr) + idx);						return 0; }
 DECL_INP(inm8s)
-	{ *pv = *(int8_t   *)pvt->addr;						return 0; }
+	{ *pv = *(((int8_t   *)pvt->addr) + idx);						return 0; }
 	
 DECL_OUT(outbe32)
-	{ out_be32(pvt->addr,v);							return 0; }
+	{ out_be32(pvt->addr + (idx<<2),v);								return 0; }
 DECL_OUT(outle32)
-	{ out_le32(pvt->addr,v);							return 0; }
+	{ out_le32(pvt->addr + (idx<<2),v);								return 0; }
 DECL_OUT(outbe16)
-	{ out_be16(pvt->addr,v&0xffff);						return 0; }
+	{ out_be16(pvt->addr + (idx<<1),v&0xffff);						return 0; }
 DECL_OUT(outle16)
-	{ out_le16(pvt->addr,v&0xffff);						return 0; }
+	{ out_le16(pvt->addr + (idx<<1),v&0xffff);						return 0; }
 DECL_OUT(out8)
-	{ out_8(pvt->addr, v&0xff);							return 0; }
+	{ out_8(pvt->addr + idx, v&0xff);								return 0; }
 
 DECL_OUT(outm32)
-	{ *(uint32_t *)pvt->addr = v;						return 0; }
+	{ *(((uint32_t *)pvt->addr)+idx) = v;							return 0; }
 DECL_OUT(outm16)
-	{ *(uint16_t *)pvt->addr = v & 0xffff;				return 0; }
+	{ *(((uint16_t *)pvt->addr)+idx) = v & 0xffff;					return 0; }
 DECL_OUT(outm8)
-	{ *(uint8_t  *)pvt->addr = v & 0xff;				return 0; }
+	{ *(((uint8_t  *)pvt->addr)+idx) = v & 0xff;					return 0; }
 
 static DevBusMappedAccessRec m32   = { inm32, outm32 };
 static DevBusMappedAccessRec be32  = { inbe32, outbe32 };
@@ -177,6 +177,90 @@ static DevBusMappedAccessRec le16s = { inle16s, outle16 };
 static DevBusMappedAccessRec m8s   = { inm8s, outm8 };
 static DevBusMappedAccessRec io8s  = { in8s, out8 };
 
+static char *
+erasePreWhite(char *p)
+{
+	while ( ' ' == *p || '\t' == *p )
+		*p-- = 0;
+	return p;
+}
+
+static char *
+eraseWhite(char *p)
+{
+	while ( ' ' == *p || '\t' == *p )
+		*p++ = 0;
+	return p;
+}
+
+static const char *
+parseArgs(char **cp_p, long **args, int *nargs)
+{
+char *opar, *cpar, *comma, *arg, *endp;
+char tag;
+const char *rval = 0;
+
+	*nargs = 0;
+	*args  = 0;
+	if ( ! (opar = strchr(*cp_p, '(')) ) {
+		return 0;
+	}
+	*opar++ = 0;
+	erasePreWhite(opar-2);
+	opar = eraseWhite(opar);
+	if ( ! (cpar = strchr(opar,')')) ) {
+		return	"devXXBus (init_record) Invalid access method string - closing ')' missing";
+	}
+
+	/* mark end of argument list by a 'comma' overwriting the closing
+	 * ')' (or the last whitespace preceding it).
+	 * This makes parsing easier since an argument list then
+ 	 * has the format   { <arg> ',' }.
+ 	 * However, since we don't know what comes after the ')' we
+	 * temporarily write a NULL char and save the original character.
+	 * If the original string terminates after ')' this is still correct
+	 * (tagging 0 with 0)...
+	 */
+	*cpar++ = ',';
+	tag = *(cpar);
+	*cpar  = 0;
+
+	arg = opar;
+	while ( (comma = strchr(arg, ',')) ) {
+		*comma++=0;
+		erasePreWhite(comma - 2);
+		comma = eraseWhite(comma);
+
+		if ( ! (*args = realloc(*args, sizeof(**args) * (*nargs+1))) ) {
+			rval = "devXXBus (init_record) No memory for argument array";
+			goto bail;
+		}
+
+		(*args)[*nargs] = strtol(arg, &endp, 0);
+		if ( !*arg || *endp ) {
+			rval = "devXXBus (init_record) Non-numerical argument in INP string";
+			goto bail;
+		}
+		(*nargs)++;
+
+		arg = comma;
+	}
+
+bail:
+	/* restore original char */
+	*cpar = tag;
+
+	*cp_p = eraseWhite(cpar);
+
+	if ( *args && (0 == *nargs || rval) ) {
+		free( *args );
+		*args  = 0;
+		*nargs = 0;
+	}
+
+	return rval;
+}
+
 unsigned long
 devBusVmeLinkInit(DBLINK *l, DevBusMappedPvt pvt, dbCommon *prec)
 {
@@ -184,15 +268,21 @@ char          *plus,*comma,*comma1,*cp;
 unsigned long offset = 0;
 uintptr_t     rval   = 0;
 char          *base  = 0;
+char          *str   = 0;
 char          *endp;
+const char    *errmsg;
 
 	if ( !pvt ) {
 		assert( pvt = malloc( sizeof(*pvt) ) );
 		prec->dpvt = pvt;
 	}
 
-	pvt->prec = prec;
-	pvt->acc = &be32;
+	pvt->prec  = prec;
+	pvt->acc   = &be32;
+	pvt->args  = 0;
+	pvt->nargs = 0;
+	pvt->udata = 0;
+	pvt->scan  = 0;
 
     switch (l->type) {
 
@@ -216,22 +306,31 @@ char          *endp;
 
     case (VME_IO) :
 
-			base = cp = malloc(strlen(l->value.vmeio.parm) + 1);
+			/* allocate one char at the beginning to store marker '0' which
+             * makes sure erasePreWhite() can never write beyond the start
+             * of the string.
+			 */
+			str = cp = malloc(strlen(l->value.vmeio.parm) + 2);
+			*cp++=0;
 			strcpy(cp,l->value.vmeio.parm);
+			/* trim white-space off the end and start of the string */
+			erasePreWhite(cp + strlen(cp)-1);
+			base = cp = eraseWhite(cp);
 
 			if ( (plus=strchr(cp,'+')) ) {
 				*plus++=0;
-				cp = plus;
+				/* erase whitespace around '+' */
+				erasePreWhite(plus-2);
+				cp = plus = eraseWhite(plus);
 			}
 			if ( (comma=strchr(cp,',')) ) {
 				*comma++=0;
-				cp = comma;
+				/* erase whitespace around ',' */
+				erasePreWhite(comma-2);
+				cp = comma = eraseWhite(comma);
+				if ( plus > comma )
+					plus = 0;
 			}
-			if ( (comma1=strchr(cp,',')) ) {
-				*comma1++=0;
-				cp = comma1;
-			}
-
 			if ( plus ) {
 				offset = strtoul(plus, &endp, 0);
 				if ( !*plus || *endp ) {
@@ -270,6 +369,26 @@ char          *endp;
 
 			if ( comma ) {
 				DevBusMappedAccess found;
+
+				if ( (errmsg = parseArgs(&cp, &pvt->args, &pvt->nargs )) ) {
+					recGblRecordError(S_db_badField, (void*)prec, errmsg);
+					break;
+				}
+{
+int i;
+	printf("ARGS:\n");
+	for ( i = 0; i<pvt->nargs; i++) {
+		printf("%li\n", pvt->args[i]);
+	}
+}
+
+				if ( (comma1=strchr(cp,',')) ) {
+					*comma1++=0;
+					/* erase whitespace around ',' */
+					erasePreWhite(comma1-2);
+					cp = comma1 = eraseWhite(comma1);
+				}
+
 				if ( (found = findIo( comma )) ) {
 					pvt->acc = found;
 				} else
@@ -301,16 +420,15 @@ char          *endp;
 									  "devXXBus (init_record) Invalid ACCESS string");
 					break;
 				}
-			}
 
-			pvt->scan = 0;
-			if ( comma1 ) {
-				IOSCANPVT found;
-				if ( (found = findIoScn( comma1 )) ) {
-					pvt->scan = found;
-				} else {
-					recGblRecordError(S_db_badField, (void*)prec,
-									  "devXXBus (init_record) Invalid IOSCANPVT string");
+				if ( comma1 ) {
+					IOSCANPVT found;
+					if ( (found = findIoScn( comma1 )) ) {
+						pvt->scan = found;
+					} else {
+						recGblRecordError(S_db_badField, (void*)prec,
+										  "devXXBus (init_record) Invalid IOSCANPVT string");
+					}
 				}
 			}
 
@@ -318,7 +436,7 @@ char          *endp;
 		break;
     }
 
-	free(base);
+	free(str);
 
 	if (rval)
 		rval += offset;
@@ -337,7 +455,7 @@ char          *endp;
 int
 devBusMappedGetVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec)
 {
-int rval = pvt->acc->rd(pvt, pvalue, prec);
+int rval = pvt->acc->rd(pvt, pvalue, 0, prec);
 	if ( rval )
 		recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
 	return rval;
@@ -346,7 +464,25 @@ int rval = pvt->acc->rd(pvt, pvalue, prec);
 int
 devBusMappedPutVal(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec)
 {
-int rval = pvt->acc->wr(pvt, value, prec);
+int rval = pvt->acc->wr(pvt, value, 0, prec);
+	if ( rval )
+		recGblSetSevr( prec, WRITE_ALARM, INVALID_ALARM );
+	return rval;
+}
+
+int
+devBusMappedGetArrVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, int idx, dbCommon *prec)
+{
+int rval = pvt->acc->rd(pvt, pvalue, idx, prec);
+	if ( rval )
+		recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
+	return rval;
+}
+
+int
+devBusMappedPutArrVal(DevBusMappedPvt pvt, epicsUInt32 value, int idx, dbCommon *prec)
+{
+int rval = pvt->acc->wr(pvt, value, idx, prec);
 	if ( rval )
 		recGblSetSevr( prec, WRITE_ALARM, INVALID_ALARM );
 	return rval;

@@ -56,7 +56,11 @@ The supported record types (ai, ao, bi, bo, li, lo,
 mbbi and mbbo) are given a link field of the
 format
 
-#C<instance>  S<shift> @<theBase>+<offset>,<access_method>
+#C<instance>  S<shift> @<theBase> '+' <offset> ',' <access_method> [ ','  <scanlist> ]
+
+where
+
+<access_method>: <name> [ '(' [ <num_arg> { ',' <num_arg> } ] ')' ]
 
 'theBase' is a symbolic name representing the
 base address of the device (later I explain how that
@@ -271,3 +275,28 @@ routine which associates a symbolic name with the user-defined
 methods. This name is then used in the INP/OUT field
 specification instead of one of the predefined methods
 (such as 'le32').
+
+Access Method Arguments
+- - - - - - - - - - - -
+Optionally, the INP/OUT string may define a list of numerical
+arguments to be passed to the access methods. The semantics
+of these methods are defined by the device-support and specific
+access method.
+By convention, array-oriented device support uses the first
+argument as a array 'length' definition. This can be used to
+convey e.g. the length of a (non-null-terminated) string in
+device memory or a buffer etc.
+
+Note that the access method API has changed -- the read/write
+methods are now also passed an 'index' argument so that
+multiple elements can be read/written from/to the device.
+
+Example: 'mydevice' provides a firmware version string of 6 
+         characters (not NULL terminated) at offset 0x2b0.
+         You can read this into a stringin record:
+
+record(stringin,"FWVERS") {
+	field(DTYP, "BusAddress")
+	field(INP,  "#C0S0@mydevice,in8(6)")
+	field(PINI, "YES")
+}

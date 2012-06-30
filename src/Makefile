@@ -28,6 +28,7 @@ DBD		= devBusMapped.dbd
 devBusMapped_SRCS += devBusMapped.c
 devBusMapped_SRCS += devAiBus.c devAoBus.c devBiBus.c devBoBus.c
 devBusMapped_SRCS += devLiBus.c devLoBus.c devMbboBus.c devMbbiBus.c
+devBusMapped_SRCS += devSiBus.c devSoBus.c
 
 ifdef EPICS_BASE_IOC_LIBS
 devBusMapped_LIBS = $(EPICS_BASE_IOC_LIBS)

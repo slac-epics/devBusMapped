@@ -1,6 +1,6 @@
 #ifndef DEV_BUS_MAPPED_SUPPORT_H
 #define DEV_BUS_MAPPED_SUPPORT_H
-/* $Id: devBusMapped.h,v 1.1.1.2 2010/04/27 16:06:49 strauman Exp $ */
+/* $Id: devBusMapped.h,v 1.2 2012/06/30 13:53:44 strauman Exp $ */
 
 /* Unified device support for simple, bus-mapped device registers */
 
@@ -60,8 +60,8 @@ typedef struct DevBusMappedAccessRec_ *DevBusMappedAccess;
 /* Read and write methods which are used by the device support 'read' and 'write'
  * routines.
  */
-typedef int (*DevBusMappedRead)(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec);
-typedef int (*DevBusMappedWrite)(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec);
+typedef int (*DevBusMappedRead) (DevBusMappedPvt pvt, epicsUInt32 *pvalue, int idx, dbCommon *prec);
+typedef int (*DevBusMappedWrite)(DevBusMappedPvt pvt, epicsUInt32  value,  int idx, dbCommon *prec);
 
 typedef struct DevBusMappedAccessRec_ {
 	DevBusMappedRead	rd;		/* read access routine				 */
@@ -76,6 +76,12 @@ devBusMappedGetVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec);
 
 int
 devBusMappedPutVal(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec);
+
+int
+devBusMappedGetArrVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, int idx, dbCommon *prec);
+
+int
+devBusMappedPutArrVal(DevBusMappedPvt pvt, epicsUInt32 value, int idx, dbCommon *prec);
 
 /* "per-device" information kept in the registry */
 typedef struct DevBusMappedDevRec_ {
@@ -104,6 +110,8 @@ typedef struct DevBusMappedPvtRec_ {
 	DevBusMappedDev		dev;	/* per-device info                   */
 	IOSCANPVT			scan;	/* io intr scan list for 'prec'      */
 	void				*udata;	/* private data for access methods   */
+	long                *args;  /* argument data passed from INP     */
+	int                 nargs;
 	volatile void		*addr;	/* reg. address (offset from base)   */
 } DevBusMappedPvtRec;
 
