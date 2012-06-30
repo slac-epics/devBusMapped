@@ -1,6 +1,6 @@
 #ifndef DEV_BUS_MAPPED_SUPPORT_H
 #define DEV_BUS_MAPPED_SUPPORT_H
-/* $Id: devBusMapped.h,v 1.11 2010/04/20 13:30:31 strauman Exp $ */
+/* $Id: devBusMapped.h,v 1.1.1.2 2010/04/27 16:06:49 strauman Exp $ */
 
 /* Unified device support for simple, bus-mapped device registers */
 
@@ -85,9 +85,7 @@ typedef struct DevBusMappedDevRec_ {
                                  * performing modifications or non-atomical reads.
 								 */
 	void          *udata;		/* for use by the driver / user */
-	const char    name[1];		/* space for the terminating NULL; the entire string
-								 * is appended here, however.
-								 */
+	const char    *name;
 } DevBusMappedDevRec, *DevBusMappedDev;
 
 /* Data "private" to the 'devBusMapped' device support. This goes
@@ -151,6 +149,14 @@ devBusMappedFind(const char *name);
  */
 long
 devBusMappedGetIointInfo(int delFrom, dbCommon *prec, IOSCANPVT *ppvt);
+
+/* Print info about 'dev'. If 'dev' is NULL then info about
+ * all registered addresses and IO methods is dumped.
+ *
+ * RETURNS number of entries dumped.
+ */
+int
+devBusMappedDump(DevBusMappedDev dev);
 
 #ifdef __cplusplus
 }

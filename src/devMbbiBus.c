@@ -57,7 +57,12 @@ epicsExportAddress(dset, devMbbiBus);
 
 static long init_record(mbbiRecord *pmbbi)
 {
-DevBusMappedPvt pvt;
+/* Keep it here for informational purposes */
+DevBusMappedPvt pvt
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
+;
 
    	if ( devBusVmeLinkInit(&pmbbi->inp, 0, (dbCommon*) pmbbi) ) {
 		recGblRecordError(S_db_badField,(void *)pmbbi,

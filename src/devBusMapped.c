@@ -6,19 +6,110 @@
 #include <inttypes.h>
 
 #include <epicsMutex.h>
-#include <registry.h>
+#include <ellLib.h>
 #include <alarm.h>
 #include <dbAccess.h>
 #include <errlog.h>
+#include <drvSup.h>
+#include <epicsExport.h>
 
 #define DEV_BUS_MAPPED_PVT
 #include <devBusMapped.h>
 #include <basicIoOps.h>
 
-/* just any unique address */
-static void	*registryId = (void*)&registryId;
-static void	*ioRegistryId = (void*)&ioRegistryId;
-static void	*ioscanRegistryId = (void*)&ioscanRegistryId;
+typedef struct DBMNodeRec_ {
+	ELLNODE            node;
+	union {
+	DevBusMappedDev    dev;
+	DevBusMappedAccess acc;
+	IOSCANPVT          scn;
+	}                  data;
+	char               name[];
+} DBMNodeRec, *DBMNode;
+
+static struct ELLLIST devList   = ELLLIST_INIT;
+static struct ELLLIST ioList    = ELLLIST_INIT;
+static struct ELLLIST ioscnList = ELLLIST_INIT;
+
+static epicsMutexId    mtx;
+
+static DBMNode
+dbmFind(const char *name, ELLLIST *l)
+{
+DBMNode  n;
+	for ( n = (DBMNode)ellFirst(l); n; n = (DBMNode)ellNext(&n->node) ) {
+		if ( 0 == strcmp(name, n->name) ) {
+			return n;
+		}
+	}
+	return 0;
+}
+
+static DBMNode
+dbmAdd(const char *name, ELLLIST *l)
+{
+DBMNode n;
+	if ( dbmFind(name, l) )
+		return 0;
+	if ( (n = malloc(sizeof(*n) + strlen(name) + 1)) ) {
+		strcpy(n->name, name);
+		ellAdd(l, &n->node);
+	}
+	return n;
+}
+
+int
+dbmIterate(ELLLIST *l, int (*fn)(DBMNode n, void *arg), void *arg)
+{
+DBMNode n;
+int     i;
+
+	epicsMutexMustLock( mtx );
+		for ( i=0, n = (DBMNode)ellFirst(l); n; n = (DBMNode)ellNext(&n->node), i++ ) {
+			if ( fn(n, arg) )
+				break;
+		}
+	epicsMutexUnlock(mtx);
+	return i;
+}
+
+/* Find the 'devBusMappedDev' of a registered device by name */
+DevBusMappedDev
+devBusMappedFind(const char *name)
+{
+DBMNode n;
+
+	epicsMutexMustLock( mtx );
+		n = dbmFind(name, &devList);
+	epicsMutexUnlock( mtx );
+
+	return n ? n->data.dev : 0;
+}
+
+static DevBusMappedAccess
+findIo(const char *name)
+{
+DBMNode n;
+
+	epicsMutexMustLock( mtx );
+		n = dbmFind(name, &ioList);
+	epicsMutexUnlock( mtx );
+
+	return n ? n->data.acc : 0;
+}
+
+static IOSCANPVT
+findIoScn(const char *name)
+{
+DBMNode n;
+
+	epicsMutexMustLock( mtx );
+		n = dbmFind(name, &ioscnList);
+	epicsMutexUnlock( mtx );
+
+	return n ? n->data.scn : 0;
+}
+
 
 
 #define DECL_INP(name) static int name(DevBusMappedPvt pvt, epicsUInt32 *pv, dbCommon *prec)
@@ -154,7 +245,7 @@ char          *endp;
 			if ( *base && !*endp ) {
 				int  i;
 				char buf[15];
-				/* they specified a number; create a registry entry on the fly... */
+				/* they specified a number; create a list entry on the fly... */
 
 				/* make a canonical name */
 				sprintf(buf,"0x%"PRIXPTR,rval);
@@ -162,12 +253,12 @@ char          *endp;
 				/* try to find; if that fails, try to create; if this fails, try
 				 * to find again - someone else might have created in the meantime...
 				 */
-				for ( i = 0;  ! (pvt->dev = (DevBusMappedDev)registryFind(registryId, buf)) && i < 1; i++ ) {
+				for ( i = 0;  ! (pvt->dev = devBusMappedFind(buf)) && i < 1; i++ ) {
 					if ( (pvt->dev = devBusMappedRegister(buf, (volatile void *)rval)) )
 						break;
 				}
 			} else {
-				pvt->dev = (DevBusMappedDev)registryFind(registryId, base);
+				pvt->dev = devBusMappedFind(base);
 			}
 
 			if ( pvt->dev ) {
@@ -178,8 +269,8 @@ char          *endp;
 			}
 
 			if ( comma ) {
-				void *found;
-				if ( (found = registryFind( ioRegistryId, comma )) ) {
+				DevBusMappedAccess found;
+				if ( (found = findIo( comma )) ) {
 					pvt->acc = found;
 				} else
 				if ( !strncmp(comma,"m32",3) ) {
@@ -214,8 +305,8 @@ char          *endp;
 
 			pvt->scan = 0;
 			if ( comma1 ) {
-				void *found;
-				if ( (found = registryFind( ioscanRegistryId, comma1 )) ) {
+				IOSCANPVT found;
+				if ( (found = findIoScn( comma1 )) ) {
 					pvt->scan = found;
 				} else {
 					recGblRecordError(S_db_badField, (void*)prec,
@@ -269,21 +360,21 @@ DevBusMappedDev
 devBusMappedRegister(const char *name, volatile void * baseAddress)
 {
 DevBusMappedDev	rval = 0, d;
+DBMNode         n;
 
-	if ( (d = malloc(sizeof(*rval) + strlen(name))) ) {
-		/* pre-load the allocated structure -  'registryAdd()'
-		 * is atomical...
-		 */
+	if ( (d = malloc(sizeof(*rval))) ) {
+
+		/* pre-load the allocated structure */
+
 		d->baseAddr = baseAddress;
-		strcpy((char*)d->name, name);
 		if ( (d->mutex = epicsMutexCreate()) ) {
-			/* NOTE: the registry keeps a pointer to the name and
-			 *       does not copy the string, therefore we keep one.
-			 *       (_must_ pass d->name, not 'name'!!)
-			 */
-			if ( registryAdd( registryId, d->name, d ) ) {
-				rval = d; d = 0;
+			epicsMutexMustLock( mtx );
+			if ( (n = dbmAdd(name, &devList)) ) {
+				rval = n->data.dev = d;
+				d = 0;
+				rval->name = n->name;
 			}
+			epicsMutexUnlock( mtx );
 		}
 	}
 
@@ -298,36 +389,29 @@ DevBusMappedDev	rval = 0, d;
 int
 devBusMappedRegisterIO(const char *name, DevBusMappedAccess acc)
 {
-char *n;
+DBMNode n;
 
-	/* EPICS registry doesn't copy the name string, so we do */
-	if ( 0 == (n=malloc(strlen(name)+1)) )
-		return -1;
+	epicsMutexMustLock( mtx );
+		if ( ( n = dbmAdd(name, &ioList) ) ) {
+			n->data.acc = acc;
+		}
+	epicsMutexUnlock( mtx );
 
-	strcpy(n,name);
-
-	return ! registryAdd( ioRegistryId, n, (void*) acc );
+	return n ? 0 : -1;
 }
 
 int
 devBusMappedRegisterIOScan(const char *name, IOSCANPVT scan)
 {
-char *n;
+DBMNode n;
 
-	/* EPICS registry doesn't copy the name string, so we do */
-	if ( 0 == (n=malloc(strlen(name)+1)) )
-		return -1;
+	epicsMutexMustLock( mtx );
+		if ( ( n = dbmAdd(name, &ioscnList) ) ) {
+			n->data.scn = scan;
+		}
+	epicsMutexUnlock( mtx );
 
-	strcpy(n,name);
-
-	return ! registryAdd( ioscanRegistryId, n, (void*) scan );
-}
-
-/* Find the 'devBusMappedDev' of a registered device by name */
-DevBusMappedDev
-devBusMappedFind(const char *name)
-{
-	return registryFind(registryId, name);
+	return n ? 0 : -1;
 }
 
 long
@@ -340,3 +424,77 @@ DevBusMappedPvt pvt = prec->dpvt;
 	*ppvt = pvt->scan;
 	return 0;
 }
+
+static int
+prDev(DBMNode n, void *unused)
+{
+	/* Caller holds the mutex - we unlock while printing (assuming 'n' can't go away) */
+	epicsMutexUnlock(mtx);
+		errlogPrintf("  @%p: %s\n", n->data.dev->baseAddr, n->data.dev->name);
+	epicsMutexMustLock(mtx);
+	/* List structure may have changed here but the node is still somewhere in the list */
+	return 0;
+}
+
+static int
+prNam(DBMNode n, void *unused)
+{
+	/* Caller holds the mutex - we unlock while printing (assuming 'n' can't go away) */
+	epicsMutexUnlock(mtx);
+		errlogPrintf("  %s\n", n->name);
+	epicsMutexMustLock(mtx);
+	/* List structure may have changed here but the node is still somewhere in the list */
+	return 0;
+}
+
+int
+devBusMappedDump(DevBusMappedDev dev)
+{
+	if ( dev ) {
+		errlogPrintf("@%p: %s\n", dev->baseAddr, dev->name);
+		return 1;
+	}
+	return dbmIterate( &devList, prDev, 0 );
+}
+
+/* In this routine we don't hold the lock while printing (slow).
+ * This means that the list could change but it can not become
+ * inconsistent. We must the lock while stepping around.
+ */
+long
+devBusMappedReport(int level)
+{
+	errlogPrintf("devBusMapped - generic device support for memory-mapped devices\n");
+	if ( level > 0 ) {
+		errlogPrintf("Registered base addresses:\n");
+		if ( 0 == devBusMappedDump( 0 ) )
+			errlogPrintf("  <NONE>\n");
+		errlogPrintf("Registered IO methods:\n");
+		if ( 0 == dbmIterate( &ioList, prNam, 0 ) )
+			errlogPrintf("  <NONE>\n");
+		errlogPrintf("Registered IOSCAN lists:\n");
+		if ( 0 == dbmIterate( &ioscnList, prNam, 0 ) )
+			errlogPrintf("  <NONE>\n");
+	}
+
+	return 0;
+}
+
+/* Must initialize the facility via the registrar -- we want to be able to
+ * use it *before* iocInit()!
+ */
+static void
+devBusMappedInit()
+{
+	mtx = epicsMutexMustCreate();
+}
+
+/* We only create a 'driver' entry for sake of the 'report' routine */
+struct drvet devBusMapped = {
+	number: 2,
+	report: devBusMappedReport,
+	init:   0
+};
+
+epicsExportAddress(drvet, devBusMapped);
+epicsExportRegistrar(devBusMappedInit);
