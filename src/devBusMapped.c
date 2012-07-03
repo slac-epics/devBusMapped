@@ -380,13 +380,6 @@ const char    *errmsg;
 					recGblRecordError(S_db_badField, (void*)prec, errmsg);
 					break;
 				}
-{
-int i;
-	printf("ARGS:\n");
-	for ( i = 0; i<pvt->nargs; i++) {
-		printf("%li\n", pvt->args[i]);
-	}
-}
 
 				if ( (comma1=strchr(cp,',')) ) {
 					*comma1++=0;
