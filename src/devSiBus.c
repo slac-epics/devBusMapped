@@ -51,6 +51,11 @@
 #define DEV_BUS_MAPPED_PVT
 #include	"devBusMapped.h"
 
+typedef struct SiDpvtRec_ {
+	DevBusMappedPvtRec pvt;
+	int                lmax;
+} SiDpvtRec, *SiDpvt;
+
 /* Create the dset for devSiBus */
 static long init_record();
 static long read_stringin();
@@ -75,39 +80,44 @@ epicsExportAddress(dset, devSiBus);
 
 static long init_record(stringinRecord *prec)
 {
-DevBusMappedPvt pvt;
-   	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
+SiDpvt          dpvt;
+
+	if ( ! (dpvt = malloc(sizeof(*dpvt))) ) {
+		recGblRecordError(S_rec_outMem,(void *)prec,
+			"devSiBus (init_record) No memory for DPVT struct");
+		prec->pact = TRUE;
+		return S_rec_outMem;
+	}
+	prec->dpvt = dpvt;
+
+   	if ( devBusVmeLinkInit(&prec->inp, &dpvt->pvt, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devSiBus (init_record) Illegal INP field");
 		prec->pact = TRUE;
 		return(S_db_badField);
 	}
-	pvt = prec->dpvt;
-	if ( pvt->nargs < 1 ) {
-		recGblRecordError(S_db_badField,(void *)prec,
-			"devSiBus (init_record) Illegal INP field: input method needs 'length' argument");
-		prec->pact = TRUE;
-		return(S_db_badField);
+	dpvt->lmax = sizeof(prec->val) - 1;
+	if (    dpvt->pvt.nargs > 0
+         && dpvt->pvt.args[0] < dpvt->lmax
+	     && dpvt->pvt.args[0] > 0 ) {
+		dpvt->lmax = dpvt->pvt.args[0];
 	}
+
     return(0);
 }
 
 static long read_stringin(stringinRecord *pstringin)
 {
-long            rval;
+long            rval = 0; /* keep compiler happy */
 epicsUInt32     v;
 int             i,l;
-DevBusMappedPvt pvt = pstringin->dpvt;
+SiDpvt          dpvt = pstringin->dpvt;
+DevBusMappedPvt pvt  = &dpvt->pvt;
 
 	
-	l = sizeof(pstringin->val) - 1;
-
-	if ( pvt->args[0] < l && pvt->args[0] > 0 )
-		l = pvt->args[0];
-
 	epicsMutexMustLock(pvt->dev->mutex);
 
-		for ( i=0; i<l; i++ ) {
+		for ( i=0; i<dpvt->lmax; i++ ) {
 			rval = devBusMappedGetArrVal(pvt, &v, i, (dbCommon*)pstringin);
 			if ( rval || 0 == v )
 				break;
@@ -116,6 +126,8 @@ DevBusMappedPvt pvt = pstringin->dpvt;
 		pstringin->val[i] = 0;
 
 	epicsMutexUnlock(pvt->dev->mutex);
+
+	devBusMappedTSESetTime((dbCommon*)pstringin);
 
 	return rval;
 }
