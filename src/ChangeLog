@@ -1,3 +1,6 @@
+#################################################
+# recent changes are documented in ../ChangeLog #
+#################################################
     20110511 (T.S.):
 
 	* devBusMapped.c: include <errlog.h>
