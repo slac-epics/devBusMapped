@@ -6,12 +6,14 @@
 #include <inttypes.h>
 
 #include <epicsMutex.h>
+#include <epicsTime.h>
 #include <ellLib.h>
 #include <alarm.h>
 #include <dbAccess.h>
 #include <errlog.h>
 #include <drvSup.h>
 #include <epicsExport.h>
+#include <cantProceed.h>
 
 #define DEV_BUS_MAPPED_PVT
 #include <devBusMapped.h>
@@ -32,6 +34,8 @@ static struct ELLLIST ioList    = ELLLIST_INIT;
 static struct ELLLIST ioscnList = ELLLIST_INIT;
 
 static epicsMutexId    mtx;
+
+static DevBusMappedTSGet getTS = epicsTimeGetCurrent;
 
 static DBMNode
 dbmFind(const char *name, ELLLIST *l)
@@ -273,7 +277,9 @@ char          *endp;
 const char    *errmsg;
 
 	if ( !pvt ) {
-		assert( pvt = malloc( sizeof(*pvt) ) );
+		pvt = malloc( sizeof(*pvt) );
+		if ( !pvt )
+			cantProceed("devBusMapped: no memory for Pvt struct\n");
 		prec->dpvt = pvt;
 	}
 
@@ -449,6 +455,32 @@ int i;
 	return !rval;
 }
 
+DevBusMappedTSGet
+devBusMappedTSGetInstall(DevBusMappedTSGet newGetTS)
+{
+DevBusMappedTSGet oldGetTS;
+
+	epicsMutexMustLock( mtx );
+		oldGetTS = getTS;
+		if ( newGetTS ) {
+			getTS = newGetTS;
+		}
+	epicsMutexUnlock( mtx );
+	return oldGetTS;
+}
+
+/*
+ * Set timestamp if TSE == epicsTimeEventDeviceTime
+ */
+void
+devBusMappedTSESetTime(dbCommon *prec)
+{
+	if ( epicsTimeEventDeviceTime == prec->tse ) {
+		getTS( &prec->time );
+	}
+}
+
+
 /* invoke the access method and do common work
  * (raise alarms)
  */
@@ -458,6 +490,7 @@ devBusMappedGetVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec)
 int rval = pvt->acc->rd(pvt, pvalue, 0, prec);
 	if ( rval )
 		recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
+	devBusMappedTSESetTime(prec);
 	return rval;
 }
 
@@ -467,6 +500,7 @@ devBusMappedPutVal(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec)
 int rval = pvt->acc->wr(pvt, value, 0, prec);
 	if ( rval )
 		recGblSetSevr( prec, WRITE_ALARM, INVALID_ALARM );
+	devBusMappedTSESetTime(prec);
 	return rval;
 }
 

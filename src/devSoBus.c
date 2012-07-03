@@ -114,5 +114,7 @@ DevBusMappedPvt pvt = pstringout->dpvt;
 
 	epicsMutexUnlock(pvt->dev->mutex);
 
+	devBusMappedTSESetTime((dbCommon*)pstringout);
+
 	return rval;
 }

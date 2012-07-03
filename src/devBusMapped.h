@@ -1,6 +1,6 @@
 #ifndef DEV_BUS_MAPPED_SUPPORT_H
 #define DEV_BUS_MAPPED_SUPPORT_H
-/* $Id: devBusMapped.h,v 1.2 2012/06/30 13:53:44 strauman Exp $ */
+/* $Id: devBusMapped.h,v 1.3 2012/06/30 19:33:26 strauman Exp $ */
 
 /* Unified device support for simple, bus-mapped device registers */
 
@@ -48,6 +48,7 @@
 #include <recGbl.h>
 #include <epicsMutex.h>
 #include <epicsTypes.h>
+#include <epicsTime.h>
 #include <link.h>
 
 #ifdef __cplusplus
@@ -56,6 +57,8 @@ extern "C" {
 
 typedef struct DevBusMappedPvtRec_ *DevBusMappedPvt;
 typedef struct DevBusMappedAccessRec_ *DevBusMappedAccess;
+
+typedef int (*DevBusMappedTSGet)(epicsTimeStamp*);
 
 /* Read and write methods which are used by the device support 'read' and 'write'
  * routines.
@@ -165,6 +168,27 @@ devBusMappedGetIointInfo(int delFrom, dbCommon *prec, IOSCANPVT *ppvt);
  */
 int
 devBusMappedDump(DevBusMappedDev dev);
+
+/*
+ * Install a callback which provides a timestamp.
+ * The callback is executed when a record processes
+ * and is found to have TSE == epicsTimeEventDeviceTime
+ * to set the record's timestamp.
+ *
+ * RETURNS: old previous callback.
+ * 
+ * NOTE:    a NULL callback pointer is never installed.
+ *          this value maybe supplied to retrieve a
+ *          function pointer of the current callback.
+ */
+DevBusMappedTSGet
+devBusMappedTSGetInstall(DevBusMappedTSGet);
+
+/*
+ * Set timestamp if TSE == epicsTimeEventDeviceTime
+ */
+void
+devBusMappedTSESetTime(dbCommon *prec);
 
 #ifdef __cplusplus
 }
