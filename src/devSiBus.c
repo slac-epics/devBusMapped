@@ -110,7 +110,7 @@ static long read_stringin(stringinRecord *pstringin)
 {
 long            rval = 0; /* keep compiler happy */
 epicsUInt32     v;
-int             i,l;
+int             i;
 SiDpvt          dpvt = pstringin->dpvt;
 DevBusMappedPvt pvt  = &dpvt->pvt;
 
