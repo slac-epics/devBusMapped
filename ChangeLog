@@ -1,4 +1,7 @@
 Changes since R3-0-1
+ - allow zero or no length parameter for stringin (sizeof(val)-1) is
+   used in this case.
+ - added API to set 'timestamp' callback which is used when TSE==-2
  - devSup for stringin and stringout has been added.
  - !!! changed access method API !!!. A 'index' parameter has been
    added so that access methods can be used to read/write array
