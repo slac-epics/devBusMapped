@@ -18,6 +18,7 @@
 #
 #==============================================================
 #
+devBusMapped-R3-1-0:    New features; see ChangeLog
 devBusMapped-R3-0-1:    Also, Build against miscUtils-R2-2-2
 
 devBusMapped-R3-0-0:    Import/sync from SSRL repository.
