@@ -76,7 +76,8 @@ epicsExportAddress(dset, devAoBus);
 
 static long init_record(aoRecord *prec)
 {
-long rval = 0;
+long        rval = 0;
+epicsUInt32 v;
 
 	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
@@ -87,11 +88,18 @@ long rval = 0;
 
 	if (!prec->pini) {
 		DevBusMappedPvt pvt = prec->dpvt;
-		if ( devBusMappedGetVal(pvt, &prec->rval, (dbCommon*)prec) );
-		recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
+		if ( devBusMappedGetVal(pvt, &v, (dbCommon*)prec) )
+			recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
+		prec->rval = (epicsInt32)v;
 		recGblResetAlarms(prec);
+		/* convert */
+	} else {
+		/* If they want pini then they want to define an intial VAL.
+		 * However, the aoRecord code will use the initial RVAL 
+		 * unless we tell it NOT to convert!
+		 */
+		rval = 2;
 	}
-	/* convert */
     return(rval);
 }
 

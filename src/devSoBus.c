@@ -1,6 +1,6 @@
-/* devAiBus.c */
+/* devSoBus.c */
 
-/* based on devAiSoft.c -
+/* based on devLiSoft.c -
  * modified by Till Straumann <strauman@slac.stanford.edu>, 2002/11/11
  */
 
@@ -45,15 +45,15 @@
 #include	"recGbl.h"
 #include	"recSup.h"
 #include	"devSup.h"
-#include	"aiRecord.h"
-#include        "epicsExport.h"
+#include	"stringoutRecord.h"
+#include    "epicsExport.h"
 
 #define DEV_BUS_MAPPED_PVT
 #include	"devBusMapped.h"
 
-/* Create the dset for devAiBus */
+/* Create the dset for devSoBus */
 static long init_record();
-static long read_ai();
+static long read_stringout();
 
 struct {
 	long		number;
@@ -61,39 +61,60 @@ struct {
 	DEVSUPFUN	init;
 	DEVSUPFUN	init_record;
 	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_ai;
-	DEVSUPFUN	special_linconv;
-}devAiBus={
-	6,
+	DEVSUPFUN	read_stringout;
+}devSoBus={
+	5,
 	NULL,
 	NULL,
 	init_record,
 	devBusMappedGetIointInfo,
-	read_ai,
-	NULL
+	read_stringout
 };
-epicsExportAddress(dset, devAiBus);
+epicsExportAddress(dset, devSoBus);
 
 
-static long init_record(aiRecord *prec)
+static long init_record(stringoutRecord *prec)
 {
-
-   	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
+DevBusMappedPvt pvt;
+   	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
-			"devAiBus (init_record) Illegal INP field");
+			"devSoBus (init_record) Illegal OUT field");
+		prec->pact = TRUE;
 		return(S_db_badField);
 	}
-
+	pvt = prec->dpvt;
+	if ( pvt->nargs < 1 || pvt->args[0]<1 ) {
+		recGblRecordError(S_db_badField,(void *)prec,
+			"devSoBus (init_record) Illegal OUT field: input method needs 'length' argument > 0");
+		prec->pact = TRUE;
+		return(S_db_badField);
+	}
     return(0);
 }
 
-static long read_ai(aiRecord *pai)
+static long read_stringout(stringoutRecord *pstringout)
 {
-DevBusMappedPvt pvt = pai->dpvt;
-long            rval;
-epicsUInt32     v;
+long            rval = 0; /* silence compiler warning */
+int             i,l;
+DevBusMappedPvt pvt = pstringout->dpvt;
 
-	rval = devBusMappedGetVal(pvt, &v, (dbCommon*)pai);
-	pai->rval = (epicsInt32)v;
+	
+	l = sizeof(pstringout->val);
+
+	if ( pvt->args[0] < l )
+		l = pvt->args[0];
+
+	epicsMutexMustLock(pvt->dev->mutex);
+
+		for ( i=0; i<l; i++ ) {
+			rval = devBusMappedPutArrVal(pvt, pstringout->val[i], i, (dbCommon*)pstringout);
+			if ( rval || 0 == pstringout->val[i] )
+				break;
+		}
+
+	epicsMutexUnlock(pvt->dev->mutex);
+
+	devBusMappedTSESetTime((dbCommon*)pstringout);
+
 	return rval;
 }

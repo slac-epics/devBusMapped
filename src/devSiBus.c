@@ -1,6 +1,6 @@
-/* devAiBus.c */
+/* devSiBus.c */
 
-/* based on devAiSoft.c -
+/* based on devLiSoft.c -
  * modified by Till Straumann <strauman@slac.stanford.edu>, 2002/11/11
  */
 
@@ -45,15 +45,20 @@
 #include	"recGbl.h"
 #include	"recSup.h"
 #include	"devSup.h"
-#include	"aiRecord.h"
-#include        "epicsExport.h"
+#include	"stringinRecord.h"
+#include    "epicsExport.h"
 
 #define DEV_BUS_MAPPED_PVT
 #include	"devBusMapped.h"
 
-/* Create the dset for devAiBus */
+typedef struct SiDpvtRec_ {
+	DevBusMappedPvtRec pvt;
+	int                lmax;
+} SiDpvtRec, *SiDpvt;
+
+/* Create the dset for devSiBus */
 static long init_record();
-static long read_ai();
+static long read_stringin();
 
 struct {
 	long		number;
@@ -61,39 +66,68 @@ struct {
 	DEVSUPFUN	init;
 	DEVSUPFUN	init_record;
 	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_ai;
-	DEVSUPFUN	special_linconv;
-}devAiBus={
-	6,
+	DEVSUPFUN	read_stringin;
+}devSiBus={
+	5,
 	NULL,
 	NULL,
 	init_record,
 	devBusMappedGetIointInfo,
-	read_ai,
-	NULL
+	read_stringin
 };
-epicsExportAddress(dset, devAiBus);
+epicsExportAddress(dset, devSiBus);
 
 
-static long init_record(aiRecord *prec)
+static long init_record(stringinRecord *prec)
 {
+SiDpvt          dpvt;
 
-   	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
+	if ( ! (dpvt = malloc(sizeof(*dpvt))) ) {
+		recGblRecordError(S_rec_outMem,(void *)prec,
+			"devSiBus (init_record) No memory for DPVT struct");
+		prec->pact = TRUE;
+		return S_rec_outMem;
+	}
+	prec->dpvt = dpvt;
+
+   	if ( devBusVmeLinkInit(&prec->inp, &dpvt->pvt, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
-			"devAiBus (init_record) Illegal INP field");
+			"devSiBus (init_record) Illegal INP field");
+		prec->pact = TRUE;
 		return(S_db_badField);
+	}
+	dpvt->lmax = sizeof(prec->val) - 1;
+	if (    dpvt->pvt.nargs > 0
+         && dpvt->pvt.args[0] < dpvt->lmax
+	     && dpvt->pvt.args[0] > 0 ) {
+		dpvt->lmax = dpvt->pvt.args[0];
 	}
 
     return(0);
 }
 
-static long read_ai(aiRecord *pai)
+static long read_stringin(stringinRecord *pstringin)
 {
-DevBusMappedPvt pvt = pai->dpvt;
-long            rval;
+long            rval = 0; /* keep compiler happy */
 epicsUInt32     v;
+int             i;
+SiDpvt          dpvt = pstringin->dpvt;
+DevBusMappedPvt pvt  = &dpvt->pvt;
 
-	rval = devBusMappedGetVal(pvt, &v, (dbCommon*)pai);
-	pai->rval = (epicsInt32)v;
+	
+	epicsMutexMustLock(pvt->dev->mutex);
+
+		for ( i=0; i<dpvt->lmax; i++ ) {
+			rval = devBusMappedGetArrVal(pvt, &v, i, (dbCommon*)pstringin);
+			if ( rval || 0 == v )
+				break;
+			pstringin->val[i] = v;
+		}
+		pstringin->val[i] = 0;
+
+	epicsMutexUnlock(pvt->dev->mutex);
+
+	devBusMappedTSESetTime((dbCommon*)pstringin);
+
 	return rval;
 }

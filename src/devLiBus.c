@@ -86,6 +86,10 @@ static long init_record(longinRecord *prec)
 
 static long read_longin(longinRecord *plongin)
 {
+long            rval;
+epicsUInt32     v;
 DevBusMappedPvt pvt = plongin->dpvt;
-	return devBusMappedGetVal(pvt, &plongin->val, (dbCommon*)plongin);
+	rval = devBusMappedGetVal(pvt, &v, (dbCommon*)plongin);
+	plongin->val = (epicsInt32)v;
+	return rval;
 }

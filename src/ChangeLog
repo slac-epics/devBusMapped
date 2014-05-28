@@ -1,0 +1,81 @@
+#################################################
+# recent changes are documented in ../ChangeLog #
+#################################################
+    20110511 (T.S.):
+
+	* devBusMapped.c: include <errlog.h>
+
+    * devBoBus.c: *** FEATURE CHANGE ***
+    let init_record return 0 (do convert) if PINI=NO so that initial value
+    is read from hardware. If PINI=YES then '2' (no convert) is returned as
+    before.
+
+	20100420 (T.S.):
+
+	* devAoBus.c: *** FEATURE CHANGE ***
+
+	Let init_record return '2' (no convert) instead of (0). This 
+	lets the record use the initial VAL or DOL (if set), respectively
+	if PINI=YES. (The current and previous behavior reads 'RVAL'
+	from the hardware and converts to VAL if PINI=NO.)
+
+	Previously, if PINI=YES the user would have to specify an initial
+	RVAL (while VAL/DOL being ignored).
+
+	20100420 (T.S.):
+
+	* devBusMapped.h: Added 'extern "C"' linkage declaration for c++
+
+	20100415 (T.S.):
+
+	* devBusMapped.c: FIXED wrong return value of devBusMappedRegisterIO,
+	devBusMappedRegisterIOScan in case of there not being enough memory.
+	(This is not a critical fix since the failure scenario is unlikely
+	and it is especially unlikely that anything will work w/o enough
+	memory.)
+
+	20100414 (T.S.):
+
+	* Makefile: set CMPLR to 'XXX'. There seems no way to use another
+	standard other than ANSI or K&R (such as C99). By setting CMPLR
+	to some unknown value we let the compiler use it's default.
+	It would be possible to set CONFORM_CFLAGS_ANSI or CONFORM_CFLAGS_STRICT
+	but the flags passed there would be compiler specific and therefore
+	we didn't choose that method.
+
+	20100414 (T.S.):
+
+	* devBusMapped.h, devBusMapped.c: Added 'const' attribute to 'name'
+	parameter passed to 'xxxRegister()' and 'devBusMappedFind()'.
+
+	20100412 (T.S.):
+
+	* devBusMapped.h: Removed inclusion of dbAccess.h. This caused conflicts
+	in applications which already would include cadef.h. EPICS apparently
+	defines the same CPP symbols (DBF_xxx) in multiple headers :-(.
+	Include link.h. instead.
+
+	20100412 (T.S.):
+
+	* devBusMapped.c: BUGFIX: parse constant link into pointer
+	value rather than using recGblInitConstantLink() (which would
+	yield truncated pointer on 64-bit platform).
+
+	Use stdint types rather than guessing width of 'int', 'short int' etc;
+	use 'uintptr_t' instead of unsigned long.
+
+	20100412 (T.S.):
+
+	* devAoBus.c: BUGFIX: removed extra ';' which resulted in an
+	alarm being raised if 'pini=no'.
+
+	20100412 (T.S.):
+
+	* devAiBus.c, devAoBus.c, devBiBus.c, devBoBus.c, devLiBus.c, devLoBus.c,
+	devMbbiBus.c, devMbboBus.c, devBusMapped.c, devBusMapped.h: 
+	devBusMappedGetValue/devBusMappedPutValue (and low-level access methods)
+	now pass epicsUInt32 instead of 'unsigned'.
+
+	20100412 (T.S.):
+
+	* ChangeLog: added.

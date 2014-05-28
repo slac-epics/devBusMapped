@@ -1,3 +1,8 @@
+
+===============================================================
+NOTE: Documentation for the package is in src/README
+===============================================================
+
 To build this module you must first create a RELEASE_SITE
 file. The RELEASE_SITE file should define the path to the
 top of your EPICS tree at your site.

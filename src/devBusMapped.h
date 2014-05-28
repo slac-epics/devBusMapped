@@ -1,6 +1,6 @@
 #ifndef DEV_BUS_MAPPED_SUPPORT_H
 #define DEV_BUS_MAPPED_SUPPORT_H
-/* $Id: devBusMapped.h,v 1.1.1.1 2005/05/04 21:22:12 saa Exp $ */
+/* $Id: devBusMapped.h,v 1.4 2012/07/03 18:23:28 strauman Exp $ */
 
 /* Unified device support for simple, bus-mapped device registers */
 
@@ -38,20 +38,33 @@
  */
 
 #include <dbCommon.h>
+/* Due to EPICS inconsistency an application cannot include
+ * both, cadef.h and dbAccess.h (otherwise there will be double
+ * defined CPP symbols).
+ * Hence we avoid including any of these from here!
 #include <dbAccess.h>
+ */
 #include <dbScan.h>
 #include <recGbl.h>
 #include <epicsMutex.h>
+#include <epicsTypes.h>
+#include <epicsTime.h>
+#include <link.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct DevBusMappedPvtRec_ *DevBusMappedPvt;
 typedef struct DevBusMappedAccessRec_ *DevBusMappedAccess;
 
+typedef int (*DevBusMappedTSGet)(epicsTimeStamp*);
+
 /* Read and write methods which are used by the device support 'read' and 'write'
  * routines.
  */
-typedef int (*DevBusMappedRead)(DevBusMappedPvt pvt, unsigned *pvalue, dbCommon *prec);
-typedef int (*DevBusMappedWrite)(DevBusMappedPvt pvt, unsigned value, dbCommon *prec);
+typedef int (*DevBusMappedRead) (DevBusMappedPvt pvt, epicsUInt32 *pvalue, int idx, dbCommon *prec);
+typedef int (*DevBusMappedWrite)(DevBusMappedPvt pvt, epicsUInt32  value,  int idx, dbCommon *prec);
 
 typedef struct DevBusMappedAccessRec_ {
 	DevBusMappedRead	rd;		/* read access routine				 */
@@ -62,10 +75,16 @@ typedef struct DevBusMappedAccessRec_ {
  * fails.
  */
 int
-devBusMappedGetVal(DevBusMappedPvt pvt, unsigned *pvalue, dbCommon *prec);
+devBusMappedGetVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, dbCommon *prec);
 
 int
-devBusMappedPutVal(DevBusMappedPvt pvt, unsigned value, dbCommon *prec);
+devBusMappedPutVal(DevBusMappedPvt pvt, epicsUInt32 value, dbCommon *prec);
+
+int
+devBusMappedGetArrVal(DevBusMappedPvt pvt, epicsUInt32 *pvalue, int idx, dbCommon *prec);
+
+int
+devBusMappedPutArrVal(DevBusMappedPvt pvt, epicsUInt32 value, int idx, dbCommon *prec);
 
 /* "per-device" information kept in the registry */
 typedef struct DevBusMappedDevRec_ {
@@ -75,9 +94,7 @@ typedef struct DevBusMappedDevRec_ {
                                  * performing modifications or non-atomical reads.
 								 */
 	void          *udata;		/* for use by the driver / user */
-	const char    name[1];		/* space for the terminating NULL; the entire string
-								 * is appended here, however.
-								 */
+	const char    *name;
 } DevBusMappedDevRec, *DevBusMappedDev;
 
 /* Data "private" to the 'devBusMapped' device support. This goes
@@ -96,6 +113,8 @@ typedef struct DevBusMappedPvtRec_ {
 	DevBusMappedDev		dev;	/* per-device info                   */
 	IOSCANPVT			scan;	/* io intr scan list for 'prec'      */
 	void				*udata;	/* private data for access methods   */
+	long                *args;  /* argument data passed from INP     */
+	int                 nargs;
 	volatile void		*addr;	/* reg. address (offset from base)   */
 } DevBusMappedPvtRec;
 
@@ -122,23 +141,57 @@ devBusVmeLinkInit(DBLINK *l, DevBusMappedPvt pvt, dbCommon *prec);
  * prior to submitting them to this routine.
  */
 DevBusMappedDev
-devBusMappedRegister(char *name, volatile void * baseAddress);
+devBusMappedRegister(const char *name, volatile void * baseAddress);
 
 /* Register an IO access method; returns 0 on success, nonzero on failure */
 int
-devBusMappedRegisterIO(char *name, DevBusMappedAccess accessMethods);
+devBusMappedRegisterIO(const char *name, DevBusMappedAccess accessMethods);
 
 /* Register an IO Intr scan list; returns 0 on success, nonzero on failure */
 int
-devBusMappedRegisterIOScan(char *name, IOSCANPVT scan);
+devBusMappedRegisterIOScan(const char *name, IOSCANPVT scan);
 
 /* Find the 'devBusMappedDev' of a registered device by name */
 DevBusMappedDev
-devBusMappedFind(char *name);
+devBusMappedFind(const char *name);
 
 /* Helper to retrieve the 'scan' (IOSCANPVT) field of a DevBusMappedPvtRec
  * attached to a record's DPVT field.
  */
 long
 devBusMappedGetIointInfo(int delFrom, dbCommon *prec, IOSCANPVT *ppvt);
+
+/* Print info about 'dev'. If 'dev' is NULL then info about
+ * all registered addresses and IO methods is dumped.
+ *
+ * RETURNS number of entries dumped.
+ */
+int
+devBusMappedDump(DevBusMappedDev dev);
+
+/*
+ * Install a callback which provides a timestamp.
+ * The callback is executed when a record processes
+ * and is found to have TSE == epicsTimeEventDeviceTime
+ * to set the record's timestamp.
+ *
+ * RETURNS: old previous callback.
+ * 
+ * NOTE:    a NULL callback pointer is never installed.
+ *          this value maybe supplied to retrieve a
+ *          function pointer of the current callback.
+ */
+DevBusMappedTSGet
+devBusMappedTSGetInstall(DevBusMappedTSGet);
+
+/*
+ * Set timestamp if TSE == epicsTimeEventDeviceTime
+ */
+void
+devBusMappedTSESetTime(dbCommon *prec);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

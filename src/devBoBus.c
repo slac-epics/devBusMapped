@@ -69,7 +69,7 @@ long rval = 2; /* don't convert */
 
 	if (!prec->pini) {
 		DevBusMappedPvt pvt = prec->dpvt;
-		unsigned		v;
+		epicsUInt32		v;
 		if ( devBusMappedGetVal(pvt, &v, (dbCommon*)prec) )
 			recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
 		if ( prec->mask ) {
@@ -77,6 +77,7 @@ long rval = 2; /* don't convert */
 		}
 		prec->rval = v;
 		recGblResetAlarms(prec);
+		rval = 0; /* do convert */
 	}
 
     return(rval);
@@ -86,7 +87,7 @@ static long write_bo(boRecord *pbo)
 {
 long			rval;
 DevBusMappedPvt pvt = pbo->dpvt;
-unsigned 		v;
+epicsUInt32 	v;
 
 epicsMutexLock(pvt->dev->mutex);
 	if ( pbo->mask ) {
