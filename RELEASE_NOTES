@@ -18,6 +18,11 @@
 #
 #==============================================================
 #
+R3.2.2:     15-Feb-2017, H. Slepicka (slepicka)
+    First Version of devBusMapped with the new Git Workflow.
+    Bump miscUtils version to R2.2.4
+    Adde .gitignore
+
 devBusMapped-R3-1-2:    Fix configure/CONFIG_SITE to not explicitly
 			  define target architectures
 devBusMapped-R3-1-1:    Build against miscUtils-R2-2-3
