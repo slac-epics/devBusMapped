@@ -18,6 +18,9 @@
 #
 #==============================================================
 #
+R3.2.3:     01-May-2017, Marcio Donadio
+    Changed RELEASE.local to use miscUtils 2.2.5
+
 R3.2.2:     15-Feb-2017, H. Slepicka (slepicka)
     First Version of devBusMapped with the new Git Workflow.
     Bump miscUtils version to R2.2.4
