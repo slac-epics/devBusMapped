@@ -55,28 +55,32 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devBiBus */
-static long init_record();
-static long read_bi();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_bi;
-}devBiBus = {
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_bi
+static long init_record(struct dbCommon*);
+static long read_bi(struct biRecord*);
+
+#ifndef HAS_bidset
+typedef struct bidset {
+	dset common;
+	long (*read_bi)(struct biRecord*);
+} bidset;
+#endif
+
+bidset devBiBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_bi = read_bi
 };
 epicsExportAddress(dset, devBiBus);
 
-static long init_record(biRecord *prec)
+static long init_record(dbCommon *prec)
 {
-   	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
+	struct biRecord* biRec = (struct biRecord*)prec;
+   	if ( devBusVmeLinkInit(&biRec->inp, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devBiBus (init_record) Illegal INP field");
 		return(S_db_badField);
