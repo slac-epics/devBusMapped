@@ -52,31 +52,34 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devSoBus */
-static long init_record();
-static long read_stringout();
+static long init_record(struct dbCommon*);
+static long read_stringout(struct stringoutRecord*);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_stringout;
-}devSoBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_stringout
+#ifndef HAS_stringoutdset
+typedef struct stringoutdset {
+	dset common;
+	long (*read_stringout)(struct stringoutRecord*);
+} stringoutdset;
+#endif
+
+stringoutdset devSoBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_stringout = read_stringout,
 };
 epicsExportAddress(dset, devSoBus);
 
 
-static long init_record(stringoutRecord *prec)
+static long init_record(struct dbCommon *prec)
 {
 DevBusMappedPvt pvt;
-   	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
+struct stringoutRecord* pSo = (struct stringoutRecord*)prec;
+   	if ( devBusVmeLinkInit(&pSo->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devSoBus (init_record) Illegal OUT field");
 		prec->pact = TRUE;

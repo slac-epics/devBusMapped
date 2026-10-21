@@ -11,7 +11,7 @@ endif
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
-#USR_CFLAGS += 
+USR_CPPFLAGS += -DUSE_TYPED_DRVET=1 -DUSE_TYPED_DSET=1
 
 #=============================
 

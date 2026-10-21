@@ -37,31 +37,35 @@
 #include	"devBusMapped.h"
 
 /* added for Channel Access Links */
-static long init_record();
+static long init_record(struct dbCommon*);
 
 /* Create the dset for devBoBus */
-static long write_bo();
+static long write_bo(struct boRecord*);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	write_bo;
-}devBoBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	write_bo};
+#ifndef HAS_bodset
+typedef struct bodset {
+	dset common;
+	long (*write_bo)(struct boRecord*);
+} bodset;
+#endif
+
+bodset devBoBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_bo = write_bo
+};
 epicsExportAddress(dset, devBoBus);
 
-static long init_record(boRecord *prec)
+static long init_record(struct dbCommon *prec)
 {
 long rval = 2; /* don't convert */
-	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
+struct boRecord* boRec = (struct boRecord*)prec;
+	if ( devBusVmeLinkInit(&boRec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devBoBus (init_record) Illegal OUT field");
 		return(S_db_badField);
@@ -72,10 +76,10 @@ long rval = 2; /* don't convert */
 		epicsUInt32		v;
 		if ( devBusMappedGetVal(pvt, &v, (dbCommon*)prec) )
 			recGblSetSevr( prec, READ_ALARM, INVALID_ALARM );
-		if ( prec->mask ) {
-			v &= prec->mask;
+		if ( boRec->mask ) {
+			v &= boRec->mask;
 		}
-		prec->rval = v;
+		boRec->rval = v;
 		recGblResetAlarms(prec);
 		rval = 0; /* do convert */
 	}
