@@ -52,34 +52,40 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devMbboBus */
-static long init_record();
-static long write_mbbo();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	write_mbbo;
-}devMbboBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	write_mbbo
+static long init_record(dbCommon* com);
+static long write_mbbo(mbboRecord* prec);
+
+mbbodset d;
+
+#ifndef HAS_mbbodset
+typedef struct mbbodset {
+	dset common;
+    long (*write_mbbo)(struct mbboRecord *prec);
+} mbbodset;
+#endif
+
+mbbodset devMbboBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_mbbo = write_mbbo
 };
 epicsExportAddress(dset, devMbboBus);
 
-static long init_record(mbboRecord *pmbbo)
+static long init_record(dbCommon* com)
 {
 DevBusMappedPvt pvt;
 epicsUInt32		v;
+mbboRecord 		*pmbbo = (mbboRecord*)com;
 
    	if ( devBusVmeLinkInit(&pmbbo->out, 0, (dbCommon*) pmbbo) ) {
 		recGblRecordError(S_db_badField,(void *)pmbbo,
 			"devMbboBus (init_record) Illegal OUT field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
 	pvt = pmbbo->dpvt; /* set by devBusVmeLinkInit() */

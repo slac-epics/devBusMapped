@@ -55,36 +55,42 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devBiBus */
-static long init_record();
-static long read_bi();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_bi;
-}devBiBus = {
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_bi
+static long init_record(dbCommon* com);
+static long read_bi(biRecord* prec);
+
+#ifndef HAS_bidset
+typedef struct bidset {
+    dset common;
+    long (*read_bi)(struct biRecord *prec);
+} bidset;
+#endif
+
+bidset devBiBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_bi = read_bi,
 };
+
 epicsExportAddress(dset, devBiBus);
-
-static long init_record(biRecord *prec)
+
+static long init_record(dbCommon* com)
 {
+biRecord *prec = (biRecord*)com;
+
    	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devBiBus (init_record) Illegal INP field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
 	prec->udf  = 0;
 
-    return(0);
+    return 0;
 }
 
 static long read_bi(biRecord *pbi)
@@ -98,5 +104,5 @@ DevBusMappedPvt pvt = pbi->dpvt;
 		 	v &= pbi->mask;
 		pbi->rval = v;
 	}
-    return(rval);
+    return rval;
 }

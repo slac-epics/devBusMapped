@@ -52,36 +52,39 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devLiBus */
-static long init_record();
-static long read_longin();
+static long init_record(dbCommon* prec);
+static long read_longin(longinRecord* prec);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_longin;
-}devLiBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_longin
+#ifndef HAS_longindset
+typedef struct longindset {
+    dset common;
+    long (*read_longin)(struct longinRecord *prec);
+} longindset;
+#endif
+
+longindset devLiBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_longin = read_longin
 };
 epicsExportAddress(dset, devLiBus);
-
 
-static long init_record(longinRecord *prec)
+static long init_record(dbCommon *com)
 {
+longinRecord* prec = (longinRecord*)com;
+
    	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devLiBus (init_record) Illegal INP field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
-    return(0);
+    return 0;
 }
 
 static long read_longin(longinRecord *plongin)

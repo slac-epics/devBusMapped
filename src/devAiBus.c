@@ -52,39 +52,41 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devAiBus */
-static long init_record();
-static long read_ai();
+static long init_record(dbCommon* com);
+static long read_ai(aiRecord* prec);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_ai;
-	DEVSUPFUN	special_linconv;
-}devAiBus={
-	6,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_ai,
-	NULL
+#ifndef HAS_aidset
+typedef struct aidset {
+	dset common;
+    long (*read_ai)(struct aiRecord *prec);
+    long (*special_linconv)(struct aiRecord *prec, int after);
+} aidset;
+#endif
+
+aidset devAiBus={
+	.common = {
+		.number = 6,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_ai = read_ai,
+	.special_linconv = NULL
 };
 epicsExportAddress(dset, devAiBus);
-
 
-static long init_record(aiRecord *prec)
+static long init_record(dbCommon* com)
 {
+aiRecord *prec = (aiRecord*)com;
 
    	if ( devBusVmeLinkInit(&prec->inp, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devAiBus (init_record) Illegal INP field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
-    return(0);
+    return 0;
 }
 
 static long read_ai(aiRecord *pai)
