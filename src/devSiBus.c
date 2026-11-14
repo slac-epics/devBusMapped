@@ -57,30 +57,33 @@ typedef struct SiDpvtRec_ {
 } SiDpvtRec, *SiDpvt;
 
 /* Create the dset for devSiBus */
-static long init_record();
-static long read_stringin();
+static long init_record(dbCommon* com);
+static long read_stringin(stringinRecord* prec);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_stringin;
-}devSiBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_stringin
+#ifndef HAS_stringindset
+typedef struct stringindset {
+    dset common;
+    long (*read_stringin)(struct stringinRecord *prec);
+} stringdset;
+#endif
+
+stringindset devSiBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_stringin = read_stringin,
 };
 epicsExportAddress(dset, devSiBus);
 
 
-static long init_record(stringinRecord *prec)
+static long init_record(dbCommon* com)
 {
 SiDpvt          dpvt;
+stringinRecord *prec = (stringinRecord*)com;
 
 	if ( ! (dpvt = malloc(sizeof(*dpvt))) ) {
 		recGblRecordError(S_rec_outMem,(void *)prec,
@@ -94,7 +97,7 @@ SiDpvt          dpvt;
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devSiBus (init_record) Illegal INP field");
 		prec->pact = TRUE;
-		return(S_db_badField);
+		return S_db_badField;
 	}
 	dpvt->lmax = sizeof(prec->val) - 1;
 	if (    dpvt->pvt.nargs > 0
@@ -103,7 +106,7 @@ SiDpvt          dpvt;
 		dpvt->lmax = dpvt->pvt.args[0];
 	}
 
-    return(0);
+    return 0;
 }
 
 static long read_stringin(stringinRecord *pstringin)

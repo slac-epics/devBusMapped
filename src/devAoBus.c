@@ -52,37 +52,40 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devAoBus */
-static long init_record();
-static long write_ao();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	write_ao;
-	DEVSUPFUN	special_linconv;
-}devAoBus={
-	6,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	write_ao,
-	NULL
+static long init_record(dbCommon* com);
+static long write_ao(aoRecord* prec);
+
+#ifndef HAS_aodset
+typedef struct aodset {
+    dset common;
+    long (*write_ao)(struct aoRecord *prec);
+    long (*special_linconv)(struct aoRecord *prec, int after);
+} aodset;
+#endif
+
+aodset devAoBus = {
+	.common = {
+		.number = 6,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_ao = write_ao,
+	.special_linconv = NULL,
 };
 epicsExportAddress(dset, devAoBus);
-
 
-static long init_record(aoRecord *prec)
+static long init_record(dbCommon* com)
 {
 long        rval = 0;
 epicsUInt32 v;
+aoRecord 	*prec = (aoRecord*)com;
 
 	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devAoBus (init_record) Illegal OUT field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
 
@@ -100,7 +103,7 @@ epicsUInt32 v;
 		 */
 		rval = 2;
 	}
-    return(rval);
+    return rval;
 }
 
 static long write_ao(aoRecord	*pao)

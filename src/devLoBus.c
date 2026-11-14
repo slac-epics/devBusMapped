@@ -52,33 +52,37 @@
 #include 	"devBusMapped.h"
 
 /* Create the dset for devLoBus */
-static long init_record();
-static long write_longout();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	write_longout;
-}devLoBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	write_longout
+static long init_record(dbCommon* com);
+static long write_longout(longoutRecord* prec);
+
+#ifndef HAS_longoutdset
+typedef struct longolongoutdset {
+    dset common;
+    long (*write_longout)(struct longoutRecord *prec);
+} longolongoutdset;
+#endif
+
+longoutdset devLoBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_longout = write_longout,
 };
 epicsExportAddress(dset, devLoBus);
-
 
-static long init_record(longoutRecord *prec)
+static long init_record(dbCommon* com)
 {
 long rval = 0;
+longoutRecord *prec = (longoutRecord*)com;
+
 	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devLoBus (init_record) Illegal OUT field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
 	if (!prec->pini) {
@@ -89,7 +93,7 @@ long rval = 0;
 		prec->val = (epicsInt32)v;
 		recGblResetAlarms(prec);
 	}
-    return(rval);
+    return rval;
 }
 
 static long write_longout(longoutRecord	*plongout)

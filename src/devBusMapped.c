@@ -653,10 +653,10 @@ devBusMappedInit()
 }
 
 /* We only create a 'driver' entry for sake of the 'report' routine */
-struct drvet devBusMapped = {
-	number: 2,
-	report: devBusMappedReport,
-	init:   0
+drvet devBusMapped = {
+	.number = 2,
+	.report = devBusMappedReport,
+	.init   = 0,
 };
 
 epicsExportAddress(drvet, devBusMapped);

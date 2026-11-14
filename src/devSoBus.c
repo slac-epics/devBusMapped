@@ -52,47 +52,50 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devSoBus */
-static long init_record();
-static long read_stringout();
+static long init_record(dbCommon* com);
+static long write_stringout(stringoutRecord* prec);
 
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_stringout;
-}devSoBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_stringout
+#ifndef HAS_stringoutdset
+typedef struct stringoutdset {
+    dset common;
+    long (*write_stringout)(struct stringoutRecord *prec);
+} stringoutdset;
+#endif
+
+stringoutdset devSoBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.write_stringout = write_stringout,
 };
 epicsExportAddress(dset, devSoBus);
-
 
-static long init_record(stringoutRecord *prec)
+static long init_record(dbCommon* com)
 {
 DevBusMappedPvt pvt;
+stringoutRecord *prec = (stringoutRecord*)com;
+
    	if ( devBusVmeLinkInit(&prec->out, 0, (dbCommon*)prec) ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devSoBus (init_record) Illegal OUT field");
 		prec->pact = TRUE;
-		return(S_db_badField);
+		return S_db_badField;
 	}
 	pvt = prec->dpvt;
 	if ( pvt->nargs < 1 || pvt->args[0]<1 ) {
 		recGblRecordError(S_db_badField,(void *)prec,
 			"devSoBus (init_record) Illegal OUT field: input method needs 'length' argument > 0");
 		prec->pact = TRUE;
-		return(S_db_badField);
+		return S_db_badField;
 	}
     return(0);
 }
 
-static long read_stringout(stringoutRecord *pstringout)
+static long write_stringout(stringoutRecord *pstringout)
 {
 long            rval = 0; /* silence compiler warning */
 int             i,l;

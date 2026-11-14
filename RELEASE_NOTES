@@ -18,6 +18,10 @@
 #
 #==============================================================
 #
+pre-release: pre-release, Jeremy Lorelli
+    Move to typed dsets for C23 compliance and compatibility
+    with new compilers.
+
 R3.2.3:     01-May-2017, Marcio Donadio
     Changed RELEASE.local to use miscUtils 2.2.5
 

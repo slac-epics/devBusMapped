@@ -36,38 +36,39 @@
 #include	"devBusMapped.h"
 
 /* Create the dset for devMbbiBus */
-static long init_record();
-static long read_mbbi();
-struct {
-	long		number;
-	DEVSUPFUN	report;
-	DEVSUPFUN	init;
-	DEVSUPFUN	init_record;
-	DEVSUPFUN	get_ioint_info;
-	DEVSUPFUN	read_mbbi;
-}devMbbiBus={
-	5,
-	NULL,
-	NULL,
-	init_record,
-	devBusMappedGetIointInfo,
-	read_mbbi
+static long init_record(dbCommon* com);
+static long read_mbbi(mbbiRecord* prec);
+
+#ifndef HAS_mbbidset
+typedef struct mbbimbbidset {
+	dset common;
+    long (*read_mbbi)(struct mbbiRecord *prec);
+} mbbimbbidset;
+#endif
+
+mbbidset devMbbiBus = {
+	.common = {
+		.number = 5,
+		.report = NULL,
+		.init = NULL,
+		.init_record = init_record,
+		.get_ioint_info = devBusMappedGetIointInfo,
+	},
+	.read_mbbi = read_mbbi,
 };
 epicsExportAddress(dset, devMbbiBus);
-
-static long init_record(mbbiRecord *pmbbi)
+
+static long init_record(dbCommon *com)
 {
+mbbiRecord *pmbbi = (mbbiRecord*)com;
 /* Keep it here for informational purposes */
-DevBusMappedPvt pvt
-#ifdef __GNUC__
-__attribute__((unused))
-#endif
-;
+DevBusMappedPvt pvt;
+	(void) pvt;
 
    	if ( devBusVmeLinkInit(&pmbbi->inp, 0, (dbCommon*) pmbbi) ) {
 		recGblRecordError(S_db_badField,(void *)pmbbi,
 			"devMbbiBus (init_record) Illegal INP field");
-		return(S_db_badField);
+		return S_db_badField;
 	}
 
 	pvt = pmbbi->dpvt; /* set by devBusVmeLinkInit() */
@@ -75,7 +76,7 @@ __attribute__((unused))
     /*to preserve old functionality*/
     if(pmbbi->nobt == 0) pmbbi->mask = 0xffffffff;
     pmbbi->mask <<= pmbbi->shft;
-    return(0);
+    return 0;
 }
 
 static long read_mbbi(mbbiRecord *pmbbi)
@@ -88,5 +89,5 @@ epicsUInt32		v;
 	if ( rval >=0 ) {
     	pmbbi->rval = v & pmbbi->mask;
 	}
-    return(rval);
+    return rval;
 }
